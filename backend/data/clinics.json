@@ -1,0 +1,407 @@
+[
+  {
+    "id": "phc-rampur-01",
+    "name": "Rampur Primary Health Centre (PHC)",
+    "type": "PHC",
+    "district": "Varanasi",
+    "block": "Kashi Rural",
+    "address": "Village Rampur, Near Gram Panchayat Bhavan, Varanasi, UP - 221008",
+    "coordinates": {
+      "lat": 25.2677,
+      "lng": 82.9913
+    },
+    "contact": {
+      "phone": "+91 94501 23456",
+      "emergencyHelpline": "108",
+      "ambulance": "+91 94501 23499"
+    },
+    "operatingHours": "24x7 Emergency / OPD: 08:00 AM - 02:00 PM",
+    "emergencyBeds": 4,
+    "doctorSpecializations": [
+      "General Medicine",
+      "Pediatrics",
+      "Ayush & Community Health"
+    ],
+    "doctorsOnDuty": [
+      {
+        "name": "Dr. Rajeshwar Sharma",
+        "specialization": "General Medicine",
+        "timing": "08:00 AM - 02:00 PM"
+      },
+      {
+        "name": "Dr. Suman Maurya",
+        "specialization": "Pediatrics",
+        "timing": "09:00 AM - 01:00 PM"
+      },
+      {
+        "name": "Vaidya Alok Tripathy",
+        "specialization": "Ayush & Community Health",
+        "timing": "10:00 AM - 02:00 PM"
+      }
+    ],
+    "medicineStock": [
+      {
+        "name": "Paracetamol 500mg",
+        "category": "Analgesic & Antipyretic",
+        "status": "In Stock",
+        "quantity": 1350
+      },
+      {
+        "name": "Amoxicillin 500mg",
+        "category": "Antibiotic",
+        "status": "In Stock",
+        "quantity": 450
+      },
+      {
+        "name": "Anti-Snake Venom (ASV)",
+        "category": "Emergency / Anti-Venom",
+        "status": "In Stock",
+        "quantity": 15
+      },
+      {
+        "name": "ORS Sachets",
+        "category": "Hydration / Electrolytes",
+        "status": "In Stock",
+        "quantity": 800
+      },
+      {
+        "name": "Iron & Folic Acid Tablets",
+        "category": "Maternal & Child Health",
+        "status": "In Stock",
+        "quantity": 1500
+      },
+      {
+        "name": "Metformin 500mg",
+        "category": "Chronic Disease / Diabetes",
+        "status": "Low Stock",
+        "quantity": 60
+      },
+      {
+        "name": "Rabies Immunoglobulin (RIG)",
+        "category": "Emergency Vaccine",
+        "status": "Out of Stock",
+        "quantity": 0
+      }
+    ]
+  },
+  {
+    "id": "chc-sonbhadra-02",
+    "name": "Sonbhadra Community Health Centre (CHC)",
+    "type": "CHC",
+    "district": "Sonbhadra",
+    "block": "Robertsganj Rural",
+    "address": "Main Highway Road, Block Colony, Sonbhadra, UP - 231216",
+    "coordinates": {
+      "lat": 24.685,
+      "lng": 83.0645
+    },
+    "contact": {
+      "phone": "+91 94152 78901",
+      "emergencyHelpline": "108",
+      "ambulance": "+91 94152 78999"
+    },
+    "operatingHours": "24x7 Emergency & Trauma / OPD: 08:30 AM - 02:30 PM",
+    "emergencyBeds": 12,
+    "doctorSpecializations": [
+      "Emergency & Trauma",
+      "Gynecology & Obstetrics",
+      "General Surgery",
+      "Pediatrics",
+      "Orthopedics"
+    ],
+    "doctorsOnDuty": [
+      {
+        "name": "Dr. Anita Sengupta",
+        "specialization": "Gynecology & Obstetrics",
+        "timing": "24x7 On-Call"
+      },
+      {
+        "name": "Dr. Virendra Yadav",
+        "specialization": "Emergency & Trauma",
+        "timing": "08:00 AM - 04:00 PM"
+      },
+      {
+        "name": "Dr. K. S. Patel",
+        "specialization": "Orthopedics",
+        "timing": "09:00 AM - 02:00 PM"
+      },
+      {
+        "name": "Dr. Neha Verma",
+        "specialization": "Pediatrics",
+        "timing": "09:00 AM - 01:30 PM"
+      }
+    ],
+    "medicineStock": [
+      {
+        "name": "Anti-Snake Venom (ASV)",
+        "category": "Emergency / Anti-Venom",
+        "status": "In Stock",
+        "quantity": 40
+      },
+      {
+        "name": "Rabies Immunoglobulin (RIG)",
+        "category": "Emergency Vaccine",
+        "status": "In Stock",
+        "quantity": 25
+      },
+      {
+        "name": "Paracetamol 500mg",
+        "category": "Analgesic & Antipyretic",
+        "status": "In Stock",
+        "quantity": 2500
+      },
+      {
+        "name": "Amoxicillin 500mg",
+        "category": "Antibiotic",
+        "status": "In Stock",
+        "quantity": 900
+      },
+      {
+        "name": "Oxytocin Injection",
+        "category": "Maternal & Child Health",
+        "status": "In Stock",
+        "quantity": 110
+      },
+      {
+        "name": "Insulin Regular (100 IU/ml)",
+        "category": "Chronic Disease / Diabetes",
+        "status": "Low Stock",
+        "quantity": 18
+      },
+      {
+        "name": "Atorvastatin 10mg",
+        "category": "Cardiovascular",
+        "status": "Out of Stock",
+        "quantity": 0
+      }
+    ]
+  },
+  {
+    "id": "phc-chandpur-03",
+    "name": "Chandpur Primary Health Centre (PHC)",
+    "type": "PHC",
+    "district": "Mirzapur",
+    "block": "Chunar Rural",
+    "address": "Village Chandpur, Chunar Sector, Mirzapur, UP - 231304",
+    "coordinates": {
+      "lat": 25.1337,
+      "lng": 82.8732
+    },
+    "contact": {
+      "phone": "+91 94520 44556",
+      "emergencyHelpline": "108",
+      "ambulance": "+91 94520 44599"
+    },
+    "operatingHours": "08:00 AM - 04:00 PM (Emergency Nurse 24x7)",
+    "emergencyBeds": 2,
+    "doctorSpecializations": [
+      "General Medicine",
+      "Dentistry",
+      "Ayush & Preventive Care"
+    ],
+    "doctorsOnDuty": [
+      {
+        "name": "Dr. Manish Srivastava",
+        "specialization": "General Medicine",
+        "timing": "08:00 AM - 02:00 PM"
+      },
+      {
+        "name": "Dr. Pooja Rai",
+        "specialization": "Dentistry",
+        "timing": "09:30 AM - 01:30 PM"
+      }
+    ],
+    "medicineStock": [
+      {
+        "name": "Paracetamol 500mg",
+        "category": "Analgesic & Antipyretic",
+        "status": "In Stock",
+        "quantity": 850
+      },
+      {
+        "name": "Amoxicillin 500mg",
+        "category": "Antibiotic",
+        "status": "Low Stock",
+        "quantity": 80
+      },
+      {
+        "name": "ORS Sachets",
+        "category": "Hydration / Electrolytes",
+        "status": "In Stock",
+        "quantity": 600
+      },
+      {
+        "name": "Anti-Snake Venom (ASV)",
+        "category": "Emergency / Anti-Venom",
+        "status": "Out of Stock",
+        "quantity": 0
+      },
+      {
+        "name": "Iron & Folic Acid Tablets",
+        "category": "Maternal & Child Health",
+        "status": "In Stock",
+        "quantity": 900
+      },
+      {
+        "name": "Metformin 500mg",
+        "category": "Chronic Disease / Diabetes",
+        "status": "In Stock",
+        "quantity": 300
+      }
+    ]
+  },
+  {
+    "id": "chc-kalyanpur-04",
+    "name": "Kalyanpur Community Health Centre (CHC)",
+    "type": "CHC",
+    "district": "Chandauli",
+    "block": "Sakaldiha",
+    "address": "Kalyanpur Crossroad, Near Tehsil Office, Chandauli, UP - 232109",
+    "coordinates": {
+      "lat": 25.334,
+      "lng": 83.2678
+    },
+    "contact": {
+      "phone": "+91 94155 11223",
+      "emergencyHelpline": "108",
+      "ambulance": "+91 94155 11299"
+    },
+    "operatingHours": "24x7 Emergency / OPD: 08:00 AM - 02:00 PM",
+    "emergencyBeds": 8,
+    "doctorSpecializations": [
+      "Gynecology & Obstetrics",
+      "Pediatrics",
+      "General Medicine",
+      "Dermatology"
+    ],
+    "doctorsOnDuty": [
+      {
+        "name": "Dr. Meenakshi Dubey",
+        "specialization": "Gynecology & Obstetrics",
+        "timing": "08:00 AM - 02:00 PM"
+      },
+      {
+        "name": "Dr. Tariq Anwar",
+        "specialization": "General Medicine",
+        "timing": "08:30 AM - 02:30 PM"
+      },
+      {
+        "name": "Dr. Rahul Agrawal",
+        "specialization": "Pediatrics",
+        "timing": "09:00 AM - 01:00 PM"
+      }
+    ],
+    "medicineStock": [
+      {
+        "name": "Anti-Snake Venom (ASV)",
+        "category": "Emergency / Anti-Venom",
+        "status": "In Stock",
+        "quantity": 20
+      },
+      {
+        "name": "Paracetamol 500mg",
+        "category": "Analgesic & Antipyretic",
+        "status": "In Stock",
+        "quantity": 1800
+      },
+      {
+        "name": "Amoxicillin 500mg",
+        "category": "Antibiotic",
+        "status": "In Stock",
+        "quantity": 720
+      },
+      {
+        "name": "Oxytocin Injection",
+        "category": "Maternal & Child Health",
+        "status": "In Stock",
+        "quantity": 65
+      },
+      {
+        "name": "Insulin Regular (100 IU/ml)",
+        "category": "Chronic Disease / Diabetes",
+        "status": "In Stock",
+        "quantity": 40
+      },
+      {
+        "name": "Rabies Immunoglobulin (RIG)",
+        "category": "Emergency Vaccine",
+        "status": "Low Stock",
+        "quantity": 5
+      }
+    ]
+  },
+  {
+    "id": "phc-madhupur-05",
+    "name": "Madhupur Primary Health Centre (PHC)",
+    "type": "PHC",
+    "district": "Prayagraj",
+    "block": "Koraon Rural",
+    "address": "Village Madhupur Post Koraon, Prayagraj, UP - 212306",
+    "coordinates": {
+      "lat": 24.9812,
+      "lng": 82.062
+    },
+    "contact": {
+      "phone": "+91 94518 99887",
+      "emergencyHelpline": "108",
+      "ambulance": "+91 94518 99899"
+    },
+    "operatingHours": "24x7 First Aid / OPD: 08:00 AM - 02:00 PM",
+    "emergencyBeds": 3,
+    "doctorSpecializations": [
+      "General Medicine",
+      "Pediatrics",
+      "Ophthalmology (Eye Care)"
+    ],
+    "doctorsOnDuty": [
+      {
+        "name": "Dr. R. P. Tiwari",
+        "specialization": "General Medicine",
+        "timing": "08:00 AM - 02:00 PM"
+      },
+      {
+        "name": "Dr. Suniti Mishra",
+        "specialization": "Pediatrics",
+        "timing": "09:00 AM - 01:00 PM"
+      }
+    ],
+    "medicineStock": [
+      {
+        "name": "Paracetamol 500mg",
+        "category": "Analgesic & Antipyretic",
+        "status": "In Stock",
+        "quantity": 900
+      },
+      {
+        "name": "ORS Sachets",
+        "category": "Hydration / Electrolytes",
+        "status": "In Stock",
+        "quantity": 500
+      },
+      {
+        "name": "Anti-Snake Venom (ASV)",
+        "category": "Emergency / Anti-Venom",
+        "status": "Low Stock",
+        "quantity": 2
+      },
+      {
+        "name": "Metformin 500mg",
+        "category": "Chronic Disease / Diabetes",
+        "status": "Out of Stock",
+        "quantity": 0
+      },
+      {
+        "name": "Amoxicillin 500mg",
+        "category": "Antibiotic",
+        "status": "In Stock",
+        "quantity": 380
+      },
+      {
+        "name": "Ciprofloxacin Eye Drops",
+        "category": "Ophthalmic",
+        "status": "In Stock",
+        "quantity": 90
+      }
+    ]
+  }
+]
