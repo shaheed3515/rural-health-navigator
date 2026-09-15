@@ -29,8 +29,16 @@ const JWT_SECRET = process.env.JWT_SECRET || "sih_rural_health_jwt_secret_key_20
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 console.log(`[AI Init] GoogleGenAI initialized. API Key present: ${!!process.env.GEMINI_API_KEY}`);
 
-// Middleware
-app.use(cors());
+// Middleware & Production CORS Configuration
+const corsOptions = {
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+};
+
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
