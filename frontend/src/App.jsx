@@ -303,6 +303,17 @@ export default function App() {
     // 2. Fetch session appointments from backend
     fetchAppointments();
 
+    // Seed facilities state immediately from backend so cards and AI always have verified facilities
+    apiFetch('/api/facilities')
+      .then((res) => res.json())
+      .then((data) => {
+        const facs = Array.isArray(data) ? data : (data?.facilities || []);
+        if (facs.length > 0) {
+          setFacilities((prev) => (prev && prev.length > 0 ? prev : facs));
+        }
+      })
+      .catch((err) => console.warn('Initial facilities load warning:', err));
+
     // 3. Immediately trigger Real-Time GPS Discovery
     triggerLiveDiscovery(20);
   }, []);
@@ -696,19 +707,27 @@ export default function App() {
         }
       }
 
-      const detectedCityOrDistrict = (currentFacilities[0]?.district && currentFacilities[0].district !== 'Nearby Healthcare')
-        ? currentFacilities[0].district
+      const facilitiesSource = (facilities && facilities.length > 0)
+        ? facilities
+        : (currentFacilities && currentFacilities.length > 0 ? currentFacilities : []);
+
+      const nearbyContext = (facilitiesSource && facilitiesSource.length > 0)
+        ? facilitiesSource.slice(0, 5).map((f) => ({
+            name: f.name || f.tags?.name || 'Local Health Centre',
+            distance: f.distance ? `${f.distance} km` : (f.distanceKm ? `${f.distanceKm} km` : 'nearby'),
+            type: f.type || f.tags?.amenity || 'Hospital/PHC',
+            beds: f.beds || f.emergencyBeds || 'Available'
+          }))
+        : [];
+
+      const detectedCityOrDistrict = (facilitiesSource[0]?.district && facilitiesSource[0].district !== 'Nearby Healthcare')
+        ? facilitiesSource[0].district
         : (selectedDistrict || (currentCoords ? `${currentCoords.lat.toFixed(2)}°, ${currentCoords.lng.toFixed(2)}°` : ''));
 
       const telemetryContext = {
-        coords: currentCoords, // { lat, lng }
+        coords: currentCoords || userLocation, // { lat, lng }
         locationName: detectedCityOrDistrict,
-        nearbyFacilities: (currentFacilities || []).slice(0, 5).map((f) => ({
-          name: f.name,
-          distance: f.distance ? `${f.distance} km` : (f.distanceKm ? `${f.distanceKm} km` : 'nearby'),
-          beds: f.beds || f.emergencyBeds || 0,
-          type: f.type || 'Healthcare Facility'
-        }))
+        nearbyFacilities: nearbyContext
       };
 
       const abortController = new AbortController();
