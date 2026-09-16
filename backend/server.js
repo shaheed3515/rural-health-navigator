@@ -143,25 +143,26 @@ function generateGroundedFallbackResponse(userMessage, preferredLang = "English"
     if (nearbyFacilities.length > 0) {
       facList = nearbyFacilities.map(f => "• **" + f.name + "** (" + (f.distance || "nearby") + ") — Beds: " + (f.beds || "Available") + " [" + (f.type || "Facility") + "]").join("\n");
     } else {
-      const facilitiesWithASV = clinicsData.filter(c => 
-        (c.medicineStock || []).some(m => m.name.toLowerCase().includes("snake venom") && m.status === "In Stock")
-      );
-      facList = facilitiesWithASV.map(c => "• **" + c.name + "** (" + c.district + ") — Beds: " + c.emergencyBeds + " | Call: " + c.contact.phone).join("\n");
+      facList = "Live GPS is scanning for your nearest emergency centers and Anti-Snake Venom (ASV) buffer depots. Please refer to the interactive live map cards on your screen.";
     }
 
     if (detectedLang === "Hindi") {
-      return "🚨 **आपातकालीन सूचना:** किसी भी गंभीर स्थिति या सांप के काटने पर तुरंत **108 एम्बुलेंस** पर कॉल करें!\n\n**एंटी-स्नेक वेनम (ASV) व इमरजेंसी बेड वाले नजदीकी केंद्र:**\n" + facList + "\n\nमातृ एवं शिशु सहायता के लिए **102** पर कॉल करें।";
+      return "🚨 **आपातकालीन सूचना:** किसी भी गंभीर स्थिति या सांप के काटने पर तुरंत **108 एम्बुलेंस** पर कॉल करें!\n\n" + facList + "\n\nमातृ एवं शिशु सहायता के लिए **102** पर कॉल करें।";
     } else if (detectedLang === "Telugu") {
-      return "🚨 **అత్యవసర సూచన:** తక్షణ అత్యవసర సహాయం కొరకు **108 అంబులెన్స్** కి కాల్ చేయండి!\n\n**యాంటీ-స్నేక్ వెనమ్ (ASV) మరియు ఎమర్జెన్సీ బెడ్లు ఉన్న కేంద్రాలు:**\n" + facList + "\n\nతల్లీ బిడ్డల సహాయం కోసం **102** కి కాల్ చేయండి।";
+      return "🚨 **అత్యవసర సూచన:** తక్షణ అత్యవసర సహాయం కొరకు **108 అంబులెన్స్** కి కాల్ చేయండి!\n\n" + facList + "\n\nతల్లీ బిడ్డల సహాయం కోసం **102** కి కాల్ చేయండి।";
     } else {
-      return "🚨 **EMERGENCY NOTICE:** Immediately call **108 Ambulance** for life-threatening emergencies or snakebites!\n\n**Facilities with Anti-Snake Venom (ASV) & Emergency Beds:**\n" + facList + "\n\nFor maternal and neonatal emergencies, dial **102**.";
+      return "🚨 **EMERGENCY NOTICE:** Immediately call **108 Ambulance** for life-threatening emergencies or snakebites!\n\n" + facList + "\n\nFor maternal and neonatal emergencies, dial **102**.";
     }
   }
 
-  // If user asks about nearby facilities and telemetry context provides them
-  if (nearbyFacilities.length > 0 && (q.includes("hospital") || q.includes("clinic") || q.includes("facility") || q.includes("nearby") || q.includes("bed") || q.includes("अस्पताल") || q.includes("नजदीक") || q.includes("दवाखाना"))) {
-    const facLines = nearbyFacilities.map(f => "• **" + f.name + "** (" + (f.distance || "nearby") + ") — Beds: " + (f.beds || "On admission") + " [" + (f.type || "Facility") + "]").join("\n");
-    return "🏥 **Nearest Verified Healthcare Facilities in " + (locationName || "your area") + ":**\n\n" + facLines + "\n\nFor 24x7 emergency medical transport, dial **108** or **102**.";
+  // If user asks about nearby facilities
+  if (q.includes("hospital") || q.includes("clinic") || q.includes("facility") || q.includes("nearby") || q.includes("bed") || q.includes("अस्पताल") || q.includes("नजदीक") || q.includes("दवाखाना")) {
+    if (nearbyFacilities.length > 0) {
+      const facLines = nearbyFacilities.map(f => "• **" + f.name + "** (" + (f.distance || "nearby") + ") — Beds: " + (f.beds || "On admission") + " [" + (f.type || "Facility") + "]").join("\n");
+      return "🏥 **Nearest Verified Healthcare Facilities in " + (locationName || "your area") + ":**\n\n" + facLines + "\n\nFor 24x7 emergency medical transport, dial **108** or **102**.";
+    } else {
+      return "🏥 Live GPS is currently scanning for nearby health centers in " + (locationName || "your area") + ". Please refer to the interactive live map cards on your screen, or visit your local government hospital / PHC. For acute emergencies, dial **108 (Ambulance)** or **102 (Maternal)** immediately.";
+    }
   }
 
   if (detectedLang === "Hindi") {
@@ -922,32 +923,29 @@ app.post("/api/chat", async (req, res) => {
     const locationName = context?.locationName || "";
     const nearbyFacilities = Array.isArray(context?.nearbyFacilities) ? context.nearbyFacilities : [];
 
-    const systemInstruction = `You are the official Swasthya Sangam Rural Health & Triage AI Assistant (PS 26133), serving citizens and health workers across India (with primary alignment to Maharashtra).
-Always acknowledge the user's specific location immediately.
-Use any provided "nearbyFacilities" context to recommend actual local PHCs, CHCs, or hospitals with their distances and bed availability.
-If the user asks to detect or find their current location and no coordinates are present, include the tag [ACTION:GET_LOCATION] in your response so the client can trigger device GPS.
-Always provide relevant emergency numbers (108 Ambulance / 102 Maternal).
-Never claim your knowledge is restricted to specific northern districts.
-Respond warmly and empathetically in the patient's preferred language (${language}, Marathi, Hindi, Telugu, or English).
+    let facilityGuidance = "";
+    if (nearbyFacilities.length > 0) {
+      const facList = nearbyFacilities.slice(0, 5).map((f, i) => 
+        `${i + 1}. ${f.name} (Distance: ${f.distance || 'nearby'}, Type: ${f.type || 'Facility'}, Beds: ${f.beds || 'Available'})`
+      ).join("\n");
+      facilityGuidance = `Recommend these exact facilities provided in context:\n${facList}`;
+    } else {
+      facilityGuidance = `Do NOT invent clinics from distant districts. Acknowledge the user's coordinates/city, state that live GPS is scanning for nearby health centers, and refer them to the interactive live map cards on their screen and 108 Emergency dispatch.`;
+    }
 
-${coords || locationName || nearbyFacilities.length > 0 ? `
-USER LOCATION & REAL-TIME TELEMETRY CONTEXT:
-- Detected User Location: ${locationName || 'Live GPS detected'}
-- User Coordinates: ${coords ? `${coords.lat}, ${coords.lng}` : 'Not provided yet'}
-- Nearby Verified Facilities (Live OSM / Directory):
-${nearbyFacilities.length > 0 ? JSON.stringify(nearbyFacilities, null, 2) : 'No live facilities in immediate radius.'}
-` : `USER LOCATION & TELEMETRY CONTEXT:
-No GPS coordinates or nearby facilities have been transmitted yet. If the user asks for nearby facilities or asks where they are or to detect their location, prompt them to allow device GPS and include the tag [ACTION:GET_LOCATION] in your response.
-`}
+    const systemInstruction = `You are the official Swasthya Sangam Rural Health & Triage AI Assistant (PS 26133). 
+You serve citizens and healthcare workers across ALL OF INDIA, with primary alignment to the Government of Maharashtra.
+When a user specifies ANY location (e.g., Kurnool, Pune, Nashik, or any other district), you MUST acknowledge their specific location and provide helpful clinical guidance and advise them to visit their local government hospital or PHC.
+NEVER mention Uttar Pradesh. NEVER state that your database only covers specific districts.
+Always provide emergency helpline numbers (108 Ambulance / 102 Maternal).
 
-GROUNDING RULES:
-1. When recommending healthcare facilities, prioritize the live "nearbyFacilities" provided in the telemetry context above.
-2. If citing doctor specializations, emergency beds, or medicine stock, use the nearby facilities and the rural health database below.
-3. For acute medical emergencies (snakebite, heavy bleeding, unconsciousness, severe chest pain, active labor), instruct the user to dial 108 (Ambulance) or 102 (Maternal) immediately.
+LOCAL FACILITIES INSTRUCTIONS:
+${facilityGuidance}
 
-RURAL HEALTHCARE KNOWLEDGE BASE:
-${JSON.stringify(clinicsData, null, 2)}
-`;
+USER CONTEXT:
+- Location / District: ${locationName || 'Live User'}
+- Coordinates: ${coords ? `${coords.lat}, ${coords.lng}` : 'Pending live detection'}
+Respond warmly in the patient's preferred language (${language}, Marathi, Hindi, Telugu, or English).`;
 
     let imagePart = null;
     let hasImage = false;

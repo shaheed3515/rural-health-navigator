@@ -665,14 +665,33 @@ export default function App() {
     setChatLoading(true);
 
     try {
-      const detectedCityOrDistrict = (facilities[0]?.district && facilities[0].district !== 'Nearby Healthcare')
-        ? facilities[0].district
-        : (selectedDistrict || (userLocation ? `${userLocation.lat.toFixed(2)}°, ${userLocation.lng.toFixed(2)}°` : ''));
+      let currentFacilities = facilities || [];
+      let currentCoords = userLocation;
+
+      const isFacilityRequest = /hospital|clinic|doctor|phc|chc|nearby|facility|facilities|bed|emergency|अस्पताल|दवाखाना|नजदीक|ఆసుపత్రి/i.test(prompt);
+
+      if (isFacilityRequest && (!currentFacilities || currentFacilities.length === 0 || isLocating)) {
+        // Await GPS/Overpass discovery resolution FIRST before dispatching to /api/chat
+        const discoveryResult = await new Promise((resolve) => {
+          triggerLiveDiscovery(searchRadius / 1000, (coords, realHospitals) => {
+            resolve({ coords, realHospitals });
+          });
+        });
+
+        if (discoveryResult && discoveryResult.realHospitals && discoveryResult.realHospitals.length > 0) {
+          currentFacilities = discoveryResult.realHospitals;
+          currentCoords = discoveryResult.coords || currentCoords;
+        }
+      }
+
+      const detectedCityOrDistrict = (currentFacilities[0]?.district && currentFacilities[0].district !== 'Nearby Healthcare')
+        ? currentFacilities[0].district
+        : (selectedDistrict || (currentCoords ? `${currentCoords.lat.toFixed(2)}°, ${currentCoords.lng.toFixed(2)}°` : ''));
 
       const telemetryContext = {
-        coords: userLocation, // { lat, lng }
+        coords: currentCoords, // { lat, lng }
         locationName: detectedCityOrDistrict,
-        nearbyFacilities: (facilities || []).slice(0, 5).map((f) => ({
+        nearbyFacilities: (currentFacilities || []).slice(0, 5).map((f) => ({
           name: f.name,
           distance: f.distance ? `${f.distance} km` : (f.distanceKm ? `${f.distanceKm} km` : 'nearby'),
           beds: f.beds || f.emergencyBeds || 0,
