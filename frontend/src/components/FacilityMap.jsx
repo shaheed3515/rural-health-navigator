@@ -314,7 +314,7 @@ export default function FacilityMap({
   return (
     <div className="bg-white rounded-2xl border border-[#e0f2fe] overflow-hidden shadow-sm flex flex-col relative w-full">
       {/* Top Floating Controls Bar */}
-      <div className="absolute top-3 left-3 z-20 flex items-center gap-2">
+      <div className="absolute top-3 left-3 z-20 flex items-center gap-2 max-w-[calc(100%-24px)] flex-wrap">
         <button
           type="button"
           onClick={handleGetLocation}
@@ -332,18 +332,18 @@ export default function FacilityMap({
               <circle cx="12" cy="10" r="3" />
             </svg>
           )}
-          <span>{locating ? 'Detecting GPS...' : 'Locate My Position'}</span>
+          <span>{locating ? 'Detecting...' : <>Locate<span className="hidden sm:inline"> My Position</span></>}</span>
         </button>
 
         {userLocation && (
-          <span className="px-3 py-1.5 bg-[#1d68bd] text-white font-bold text-[11px] rounded-xl shadow-xs backdrop-blur-md flex items-center gap-1.5">
+          <span className="px-2.5 py-1.5 bg-[#1d68bd] text-white font-bold text-[10px] sm:text-[11px] rounded-xl shadow-xs backdrop-blur-md flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-sky-300"></span> GPS Active ({userLocation.lat.toFixed(2)}°, {userLocation.lng.toFixed(2)}°)
           </span>
         )}
       </div>
 
-      {/* Clean 3-Item Light-Blue Legend */}
-      <div className="absolute top-3 right-3 z-20 bg-white/95 backdrop-blur-sm p-3 rounded-2xl border border-[#e0edfd] text-[11px] shadow-sm space-y-1.5 font-semibold text-slate-700">
+      {/* Desktop Floating 3-Item Light-Blue Legend (hidden on mobile to prevent control collision) */}
+      <div className="hidden sm:block absolute top-3 right-3 z-20 bg-white/95 backdrop-blur-sm p-3 rounded-2xl border border-[#e0edfd] text-[11px] shadow-sm space-y-1.5 font-semibold text-slate-700">
         <div className="font-extrabold text-[#1d68bd] text-[10px] uppercase tracking-wider mb-1">
           Healthcare Network GIS
         </div>
@@ -372,11 +372,28 @@ export default function FacilityMap({
         </div>
       )}
 
-      {/* Leaflet Map Canvas with Explicit Required Dimensions */}
+      {/* Leaflet Map Canvas with Responsive Height */}
       <div
         ref={mapContainerRef}
-        style={{ height: '520px', width: '100%', borderRadius: '12px', zIndex: 1 }}
+        className="h-[340px] sm:h-[440px] lg:h-[520px] w-full"
+        style={{ width: '100%', borderRadius: '12px', zIndex: 1 }}
       />
+
+      {/* Mobile Legend Bar (docked below the map on mobile <sm) */}
+      <div className="sm:hidden p-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[10px] font-semibold text-slate-600 flex-wrap gap-2">
+        <div className="flex items-center gap-1">
+          <span className="w-2.5 h-2.5 rounded bg-[#1d68bd]"></span>
+          <span>Hospital</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="w-2.5 h-2.5 rounded bg-[#38bdf8]"></span>
+          <span>Clinic</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#1d68bd] ring-1 ring-[#38bdf8]"></span>
+          <span>Your GPS</span>
+        </div>
+      </div>
 
       {/* Bottom Floating Active Selection Card */}
       {activeClinic && (
