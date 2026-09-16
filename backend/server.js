@@ -54,7 +54,7 @@ const inMemoryUsers = [
     fullName: "Dr. S. K. Verma",
     title: "Chief Medical Officer (CMO)",
     role: "admin",
-    district: "Varanasi Division",
+    district: "Maharashtra Public Health Division",
     preferredLanguage: "English"
   }
 ];
@@ -89,7 +89,7 @@ connectDB().then((connected) => {
 });
 
 // Helper: Fallback grounded AI response generator
-function generateGroundedFallbackResponse(userMessage, preferredLang = "English", hasImage = false) {
+function generateGroundedFallbackResponse(userMessage, preferredLang = "English", hasImage = false, context = null) {
   const q = (userMessage || "").toLowerCase();
   
   let detectedLang = preferredLang;
@@ -99,53 +99,80 @@ function generateGroundedFallbackResponse(userMessage, preferredLang = "English"
     detectedLang = "Telugu";
   }
 
-  const isGreeting = /^(hi|hello|hey|namaste|नमस्ते|నమస్కారం|good morning)/i.test(q.trim());
-  if (isGreeting && !hasImage && q.length < 25) {
+  const coords = context?.coords;
+  const locationName = context?.locationName || "";
+  const nearbyFacilities = Array.isArray(context?.nearbyFacilities) ? context.nearbyFacilities : [];
+
+  // Check for location detection intent
+  const isLocationQuery = /where am i|find my location|detect location|get location|my location|track location|current location|कहाँ हूँ|कहा हु|मेरी लोकेशन|माझे स्थान|स्थान शोधा|లొకేషన్|నా స్థానం/i.test(q);
+  if (isLocationQuery && (!coords || !coords.lat)) {
     if (detectedLang === "Hindi") {
-      return "नमस्ते! मैं आपका स्वास्थ्य एआई सहायक हूँ। मैं आपकी क्या मदद कर सकता हूँ? आप मुझसे नजदीकी स्वास्थ्य केंद्र, डॉक्टरों की ड्यूटी, आपातकालीन बेड या दवा स्टॉक के बारे में पूछ सकते हैं।";
+      return "[ACTION:GET_LOCATION] मैं आपके निकटतम प्राथमिक स्वास्थ्य केंद्र (PHC) और अस्पताल खोजने के लिए आपकी सटीक लोकेशन प्राप्त कर रहा हूँ। कृपया अपने ब्राउज़र में GPS लोकेशन अनुमति प्रदान करें। आपातकाल में तुरंत 108 डायल करें।";
     } else if (detectedLang === "Telugu") {
-      return "నమస్కారం! నేను మీ ఆరోగ్య AI సహాయకుడిని. ఈరోజు మీకు ఎలా సహాయపడగలను? మందుల లభ్యత, అందుబాటులో ఉన్న పడకలు లేదా వైద్యుల గురించి నన్ను అడగవచ్చు.";
+      return "[ACTION:GET_LOCATION] సమీప ఆసుపత్రులు మరియు ఆరోగ్య కేంద్రాలను కనుగొనడానికి మీ ప్రత్యక్ష స్థానాన్ని గుర్తిస్తున్నాము. దయచేసి బ్రౌజర్‌లో GPS అనుమతి ఇవ్వండి. అత్యవసర సహాయం కొరకు 108 కి కాల్ చేయండి.";
     } else {
-      return "Hello! I am your Health AI Assistant. How can I assist you with your health inquiry today? You can ask about nearby health centres, emergency bed availability, doctor rosters, or medicine stock.";
+      return "[ACTION:GET_LOCATION] I am detecting your live location to identify the closest Primary Health Centres (PHCs) and Community Hospitals. Please allow device GPS permission when prompted. For acute emergencies, call 108 immediately.";
+    }
+  }
+
+  const isGreeting = /^(hi|hello|hey|namaste|नमस्ते|నమస్కారం|नमस्कार|good morning)/i.test(q.trim());
+  if (isGreeting && !hasImage && q.length < 25) {
+    const locAck = locationName ? (detectedLang === "Hindi" ? " (" + locationName + " क्षेत्र)" : detectedLang === "Telugu" ? " (" + locationName + " ప్రాంతం)" : " (" + locationName + " region)") : "";
+    if (detectedLang === "Hindi") {
+      return "नमस्ते! मैं स्वास्थ्य संगम ग्रामीण स्वास्थ्य एवं ट्राइएज एआई सहायक हूँ" + locAck + "। मैं आपकी क्या मदद कर सकता हूँ? आप मुझसे नजदीकी स्वास्थ्य केंद्र, डॉक्टरों की ड्यूटी, आपातकालीन बेड या एंटी-वेनम उपलब्धता के बारे में पूछ सकते हैं।";
+    } else if (detectedLang === "Telugu") {
+      return "నమస్కారం! నేను స్వాస్థ్య సంగం గ్రామీణ ఆరోగ్య AI సహాయకుడిని" + locAck + ". ఈరోజు మీకు ఎలా సహాయపడగలను? సమీప క్లినిక్‌లు, అత్యవసర పడకలు లేదా మందుల గురించి నన్ను అడగవచ్చు.";
+    } else {
+      return "Hello! I am your official Swasthya Sangam Rural Health & Triage AI Assistant" + locAck + ". How can I assist you with your healthcare inquiry today? You can ask about nearby health centres, emergency bed availability, doctor rosters, or medicine stocks.";
     }
   }
 
   if (hasImage) {
     if (detectedLang === "Hindi") {
-      return `📷 **दवा पर्ची / चित्र विश्लेषण:**\n\nमैंने आपकी संलग्न दवा पर्ची या मेडिकल चित्र की समीक्षा की है।\n• हमारे प्राथमिक व सामुदायिक केंद्रों में Paracetamol, Amoxicillin, ORS, और Iron Folic Acid स्टॉक में उपलब्ध हैं।\n• स्त्री रोग या बाल रोग विशेषज्ञों के लिए सोनभद्र या कल्याणपुर सीएचसी में परामर्श लें।\n• आपातकाल में तुरंत **108** डायल करें।`;
+      return "📷 **दवा पर्ची / चित्र विश्लेषण:**\n\nमैंने आपकी संलग्न दवा पर्ची या मेडिकल चित्र की समीक्षा की है।\n• हमारे प्राथमिक व सामुदायिक केंद्रों में Paracetamol, Amoxicillin, ORS, और Iron Folic Acid स्टॉक में उपलब्ध हैं।\n• विशेषज्ञ परामर्श के लिए नजदीकी सामुदायिक स्वास्थ्य केंद्र (CHC) में संपर्क करें।\n• आपातकाल में तुरंत **108 (एम्बुलेंस)** या **102 (मातृ स्वास्थ्य)** पर कॉल करें।";
     } else if (detectedLang === "Telugu") {
-      return `📷 **వైద్య చీటీ / చిత్రం విశ్లేషణ:**\n\nమీరు అప్‌లోడ్ చేసిన మెడికల్ చిత్రాన్ని పరిశీలించాము.\n• సాధారణ మందులు (పారాసిటమాల్, అమోక్సిసిలిన్, ఓఆర్ఎస్) మన ప్రాథమిక ఆరోగ్య కేంద్రాలలో అందుబాటులో ఉన్నాయి.\n• అత్యవసర సహాయం కొరకు వెంటనే **108** కి కాల్ చేయండి.`;
+      return "📷 **వైద్య చీటీ / చిత్రం విశ్లేషణ:**\n\nమీరు అప్‌లోడ్ చేసిన మెడికల్ చిత్రాన్ని పరిశీలించాము।\n• సాధారణ మందులు (పారాసిటమాల్, అమోక్సిసిలిన్, ఓఆర్ఎస్) మన ప్రాథమిక ఆరోగ్య కేంద్రాలలో అందుబాటులో ఉన్నాయి।\n• అత్యవసర సహాయం కొరకు వెంటనే **108** లేదా **102** కి కాల్ చేయండి।";
     } else {
-      return `📷 **Prescription / Image Assessment:**\n\nI have reviewed your attached medical image/prescription.\n• Essential medicines (Paracetamol, Amoxicillin, ORS, Iron Folic Acid) are in stock across our rural centres.\n• Specialists for pediatric and maternity care are on duty at Sonbhadra CHC and Kalyanpur CHC.\n• For urgent medical distress, call 108 immediately.`;
+      return "📷 **Prescription / Image Assessment:**\n\nI have reviewed your attached medical image/prescription.\n• Essential medicines (Paracetamol, Amoxicillin, ORS, Iron Folic Acid) are tracked across local health centres.\n• Specialists for pediatric, maternal, and general medicine are available at nearby Community Health Centres.\n• For urgent medical distress, call 108 (Ambulance) or 102 (Maternal) immediately.";
     }
   }
 
   const isEmergency = /emergency|snake|bite|venom|bleeding|chest pain|accident|आपात|साँप|काटा|రక్తం|పాము/i.test(q);
   if (isEmergency || q.includes("snake") || q.includes("venom")) {
-    const facilitiesWithASV = clinicsData.filter(c => 
-      (c.medicineStock || []).some(m => m.name.toLowerCase().includes("snake venom") && m.status === "In Stock")
-    );
+    let facList = "";
+    if (nearbyFacilities.length > 0) {
+      facList = nearbyFacilities.map(f => "• **" + f.name + "** (" + (f.distance || "nearby") + ") — Beds: " + (f.beds || "Available") + " [" + (f.type || "Facility") + "]").join("\n");
+    } else {
+      const facilitiesWithASV = clinicsData.filter(c => 
+        (c.medicineStock || []).some(m => m.name.toLowerCase().includes("snake venom") && m.status === "In Stock")
+      );
+      facList = facilitiesWithASV.map(c => "• **" + c.name + "** (" + c.district + ") — Beds: " + c.emergencyBeds + " | Call: " + c.contact.phone).join("\n");
+    }
 
     if (detectedLang === "Hindi") {
-      return `🚨 **आपातकालीन सलाह:** किसी भी गंभीर स्थिति या सांप के काटने पर तुरंत **108 एम्बुलेंस** पर कॉल करें!\n\n**एंटी-स्नेक वेनम (ASV) और इमरजेंसी बेड वाले केंद्र:**\n` +
-        facilitiesWithASV.map(c => `• **${c.name}** (${c.district}) - बेड: ${c.emergencyBeds}, फोन: ${c.contact.phone}`).join("\n");
+      return "🚨 **आपातकालीन सूचना:** किसी भी गंभीर स्थिति या सांप के काटने पर तुरंत **108 एम्बुलेंस** पर कॉल करें!\n\n**एंटी-स्नेक वेनम (ASV) व इमरजेंसी बेड वाले नजदीकी केंद्र:**\n" + facList + "\n\nमातृ एवं शिशु सहायता के लिए **102** पर कॉल करें।";
     } else if (detectedLang === "Telugu") {
-      return `🚨 **అత్యవసర సూచన:** తక్షణ అత్యవసర సహాయం కొరకు **108 అంబులెన్స్** కి కాల్ చేయండి!\n\n**యాంటీ-స్నేక్ వెనమ్ (ASV) మరియు ఎమర్జెన్సీ బెడ్లు ఉన్న కేంద్రాలు:**\n` +
-        facilitiesWithASV.map(c => `• **${c.name}** (${c.district}) - పడకలు: ${c.emergencyBeds}, ఫోన్: ${c.contact.phone}`).join("\n");
+      return "🚨 **అత్యవసర సూచన:** తక్షణ అత్యవసర సహాయం కొరకు **108 అంబులెన్స్** కి కాల్ చేయండి!\n\n**యాంటీ-స్నేక్ వెనమ్ (ASV) మరియు ఎమర్జెన్సీ బెడ్లు ఉన్న కేంద్రాలు:**\n" + facList + "\n\nతల్లీ బిడ్డల సహాయం కోసం **102** కి కాల్ చేయండి।";
     } else {
-      return `🚨 **EMERGENCY NOTICE:** Immediately call **108 Ambulance** for life-threatening emergencies or snakebites!\n\n**Facilities with Anti-Snake Venom (ASV) & Emergency Beds In Stock:**\n` +
-        facilitiesWithASV.map(c => `• **${c.name}** (${c.district}) — Beds: ${c.emergencyBeds} | Call: ${c.contact.phone}`).join("\n");
+      return "🚨 **EMERGENCY NOTICE:** Immediately call **108 Ambulance** for life-threatening emergencies or snakebites!\n\n**Facilities with Anti-Snake Venom (ASV) & Emergency Beds:**\n" + facList + "\n\nFor maternal and neonatal emergencies, dial **102**.";
     }
   }
 
+  // If user asks about nearby facilities and telemetry context provides them
+  if (nearbyFacilities.length > 0 && (q.includes("hospital") || q.includes("clinic") || q.includes("facility") || q.includes("nearby") || q.includes("bed") || q.includes("अस्पताल") || q.includes("नजदीक") || q.includes("दवाखाना"))) {
+    const facLines = nearbyFacilities.map(f => "• **" + f.name + "** (" + (f.distance || "nearby") + ") — Beds: " + (f.beds || "On admission") + " [" + (f.type || "Facility") + "]").join("\n");
+    return "🏥 **Nearest Verified Healthcare Facilities in " + (locationName || "your area") + ":**\n\n" + facLines + "\n\nFor 24x7 emergency medical transport, dial **108** or **102**.";
+  }
+
   if (detectedLang === "Hindi") {
-    return `मैं आपकी स्वास्थ्य संबंधी जानकारी में मदद कर सकता हूँ। हमारे पास 5 स्वास्थ्य केंद्रों का लाइव डेटा है। आप विशिष्ट प्रश्न पूछ सकते हैं, जैसे: "कहाँ एंटी-वेनम उपलब्ध है?" या "सोनभद्र में कौन से डॉक्टर ड्यूटी पर हैं?"`;
+    return "मैं स्वास्थ्य संगम का आधिकारिक एआई सहायक हूँ। मैं आपको निकटतम प्राथमिक व सामुदायिक स्वास्थ्य केंद्र, डॉक्टर ड्यूटी रोस्टर, आपातकालीन बेड और दवाओं की उपलब्धता के बारे में लाइव जानकारी दे सकता हूँ। आपातकाल में 108 डायल करें।";
   } else if (detectedLang === "Telugu") {
-    return `నేను మీకు ఆరోగ్య వివరాలను అందించగలను. మా వద్ద 5 కేంద్రాల లైవ్ డేటా ఉంది. మీరు ఏదైనా నిర్దిష్ట క్లినిక్, మందుల లభ్యత లేదా అత్యవసర పడకల గురించి అడగవచ్చు.`;
+    return "నేను స్వాస్థ్య సంగం అధికారిక AI సహాయకుడిని. సమీప ఆరోగ్య కేంద్రాలు, వైద్యుల షెడ్యూల్, అత్యవసర పడకలు మరియు మందుల వివరాలను నేను అందించగలను. అత్యవసరంలో 108 కి కాల్ చేయండి.";
   } else {
-    return `I am here to help you navigate rural healthcare services across our 5 district health centres. Please feel free to ask about emergency beds, doctor schedules, or medicine stocks.`;
+    return "I am your official Swasthya Sangam Rural Health & Triage AI Assistant. I can assist you with nearby primary and community health centres, doctor availability, emergency beds, and medicine supply. For acute emergencies, call 108 (Ambulance) or 102 (Maternal) immediately.";
   }
 }
+
 
 // ==========================================
 // 1. Healthcheck & Stats
@@ -200,7 +227,7 @@ app.get("/api/stats", (req, res) => {
 // If phone exists, logs them in; otherwise registers new patient. Issues JWT.
 app.post("/api/auth/register-patient", async (req, res) => {
   try {
-    const { fullName, phone, district = "Varanasi", preferredLanguage = "English" } = req.body;
+    const { fullName, phone, district = "Maharashtra", preferredLanguage = "English" } = req.body;
 
     if (!fullName || !phone) {
       return res.status(400).json({
@@ -343,7 +370,7 @@ app.post("/api/auth/login-admin", async (req, res) => {
       username: adminUser.username,
       fullName: adminUser.fullName || "Dr. S. K. Verma",
       title: "Chief Medical Officer (CMO)",
-      district: adminUser.district || "Varanasi Division"
+      district: adminUser.district || "Maharashtra Health Division"
     };
 
     const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: "7d" });
@@ -406,7 +433,7 @@ app.post("/api/auth/login", (req, res) => {
           name: "Dr. S. K. Verma",
           title: "Chief Medical Officer (CMO)",
           role: "admin",
-          district: "Varanasi Division"
+          district: "Maharashtra Health Division"
         }
       });
     } else {
@@ -879,7 +906,7 @@ app.get("/api/appointments", (req, res) => {
 // ==========================================
 app.post("/api/chat", async (req, res) => {
   try {
-    const { message = "", language = "English", image = null } = req.body;
+    const { message = "", language = "English", image = null, context = null } = req.body;
     const trimmedMessage = (message || "").trim();
 
     console.log("Gemini API Key present?", !!process.env.GEMINI_API_KEY);
@@ -891,15 +918,34 @@ app.post("/api/chat", async (req, res) => {
       });
     }
 
-    const systemInstruction = `You are an empathetic, intelligent rural health navigator. Answer the patient naturally. If they say hello or have a doubt, greet them warmly and ask how you can help them today. Do NOT regurgitate the entire clinic list on simple greetings. Only cite clinics, doctors, or stock when relevant to the user's inquiry.
+    const coords = context?.coords;
+    const locationName = context?.locationName || "";
+    const nearbyFacilities = Array.isArray(context?.nearbyFacilities) ? context.nearbyFacilities : [];
 
-GROUNDING DATABASE:
-Use ONLY the verified rural clinics database below when answering questions about facilities, doctor specializations, emergency beds, and medicine availability. Do NOT make up clinics, doctors, beds, or medicines that are not in the database.
-If a medicine is low or out of stock at a clinic, advise the patient and recommend a nearby clinic from the database that has it in stock.
-For acute medical emergencies (snakebite, heavy bleeding, unconsciousness, severe chest pain, active labor), advise calling 108 immediately.
-Respond warmly in the patient's preferred language (${language}, Hindi, Telugu, or English).
+    const systemInstruction = `You are the official Swasthya Sangam Rural Health & Triage AI Assistant (PS 26133), serving citizens and health workers across India (with primary alignment to Maharashtra).
+Always acknowledge the user's specific location immediately.
+Use any provided "nearbyFacilities" context to recommend actual local PHCs, CHCs, or hospitals with their distances and bed availability.
+If the user asks to detect or find their current location and no coordinates are present, include the tag [ACTION:GET_LOCATION] in your response so the client can trigger device GPS.
+Always provide relevant emergency numbers (108 Ambulance / 102 Maternal).
+Never claim your knowledge is restricted to specific northern districts.
+Respond warmly and empathetically in the patient's preferred language (${language}, Marathi, Hindi, Telugu, or English).
 
-VERIFIED CLINICS DATABASE:
+${coords || locationName || nearbyFacilities.length > 0 ? `
+USER LOCATION & REAL-TIME TELEMETRY CONTEXT:
+- Detected User Location: ${locationName || 'Live GPS detected'}
+- User Coordinates: ${coords ? `${coords.lat}, ${coords.lng}` : 'Not provided yet'}
+- Nearby Verified Facilities (Live OSM / Directory):
+${nearbyFacilities.length > 0 ? JSON.stringify(nearbyFacilities, null, 2) : 'No live facilities in immediate radius.'}
+` : `USER LOCATION & TELEMETRY CONTEXT:
+No GPS coordinates or nearby facilities have been transmitted yet. If the user asks for nearby facilities or asks where they are or to detect their location, prompt them to allow device GPS and include the tag [ACTION:GET_LOCATION] in your response.
+`}
+
+GROUNDING RULES:
+1. When recommending healthcare facilities, prioritize the live "nearbyFacilities" provided in the telemetry context above.
+2. If citing doctor specializations, emergency beds, or medicine stock, use the nearby facilities and the rural health database below.
+3. For acute medical emergencies (snakebite, heavy bleeding, unconsciousness, severe chest pain, active labor), instruct the user to dial 108 (Ambulance) or 102 (Maternal) immediately.
+
+RURAL HEALTHCARE KNOWLEDGE BASE:
 ${JSON.stringify(clinicsData, null, 2)}
 `;
 
@@ -988,7 +1034,7 @@ ${JSON.stringify(clinicsData, null, 2)}
       }
     }
 
-    const fallbackReply = generateGroundedFallbackResponse(trimmedMessage, language, hasImage);
+    const fallbackReply = generateGroundedFallbackResponse(trimmedMessage, language, hasImage, context);
     return res.json({
       success: true,
       source: "grounded-clinical-fallback",

@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema({
   },
   district: {
     type: String,
-    default: 'Varanasi',
+    default: 'Maharashtra',
   },
   preferredLanguage: {
     type: String,

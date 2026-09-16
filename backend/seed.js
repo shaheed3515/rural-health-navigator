@@ -46,7 +46,7 @@ export async function seedDatabase() {
         username: 'cmo_admin',
         passwordHash,
         role: 'admin',
-        district: 'Varanasi Division',
+        district: 'Maharashtra Health Division',
         preferredLanguage: 'English'
       });
       console.log('[Seed] Seeded default CMO Administrator account (username: cmo_admin).');

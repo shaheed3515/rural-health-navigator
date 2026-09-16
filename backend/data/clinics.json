@@ -1,19 +1,19 @@
 [
   {
-    "id": "phc-rampur-01",
-    "name": "Rampur Primary Health Centre (PHC)",
+    "id": "phc-baramati-01",
+    "name": "Baramati Rural Primary Health Centre (PHC)",
     "type": "PHC",
-    "district": "Varanasi",
-    "block": "Kashi Rural",
-    "address": "Village Rampur, Near Gram Panchayat Bhavan, Varanasi, UP - 221008",
+    "district": "Pune",
+    "block": "Baramati Rural",
+    "address": "Gram Panchayat Bhavan Road, Baramati, Pune, Maharashtra - 413102",
     "coordinates": {
-      "lat": 25.2677,
-      "lng": 82.9913
+      "lat": 18.1519,
+      "lng": 74.5772
     },
     "contact": {
-      "phone": "+91 94501 23456",
+      "phone": "+91 94220 12345",
       "emergencyHelpline": "108",
-      "ambulance": "+91 94501 23499"
+      "ambulance": "+91 94220 12399"
     },
     "operatingHours": "24x7 Emergency / OPD: 08:00 AM - 02:00 PM",
     "emergencyBeds": 4,
@@ -85,20 +85,20 @@
     ]
   },
   {
-    "id": "chc-sonbhadra-02",
-    "name": "Sonbhadra Community Health Centre (CHC)",
+    "id": "chc-dindori-02",
+    "name": "Dindori Community Health Centre (CHC)",
     "type": "CHC",
-    "district": "Sonbhadra",
-    "block": "Robertsganj Rural",
-    "address": "Main Highway Road, Block Colony, Sonbhadra, UP - 231216",
+    "district": "Nashik",
+    "block": "Dindori Tribal",
+    "address": "Main Highway Road, Block Colony, Dindori, Nashik, Maharashtra - 422202",
     "coordinates": {
-      "lat": 24.685,
-      "lng": 83.0645
+      "lat": 20.2036,
+      "lng": 73.8347
     },
     "contact": {
-      "phone": "+91 94152 78901",
+      "phone": "+91 94231 78901",
       "emergencyHelpline": "108",
-      "ambulance": "+91 94152 78999"
+      "ambulance": "+91 94231 78999"
     },
     "operatingHours": "24x7 Emergency & Trauma / OPD: 08:30 AM - 02:30 PM",
     "emergencyBeds": 12,
@@ -177,20 +177,20 @@
     ]
   },
   {
-    "id": "phc-chandpur-03",
-    "name": "Chandpur Primary Health Centre (PHC)",
+    "id": "phc-wai-03",
+    "name": "Wai Primary Health Centre (PHC)",
     "type": "PHC",
-    "district": "Mirzapur",
-    "block": "Chunar Rural",
-    "address": "Village Chandpur, Chunar Sector, Mirzapur, UP - 231304",
+    "district": "Satara",
+    "block": "Wai Rural",
+    "address": "Village Wai, Pasarni Sector, Satara, Maharashtra - 412803",
     "coordinates": {
-      "lat": 25.1337,
-      "lng": 82.8732
+      "lat": 17.9465,
+      "lng": 73.8924
     },
     "contact": {
-      "phone": "+91 94520 44556",
+      "phone": "+91 94212 44556",
       "emergencyHelpline": "108",
-      "ambulance": "+91 94520 44599"
+      "ambulance": "+91 94212 44599"
     },
     "operatingHours": "08:00 AM - 04:00 PM (Emergency Nurse 24x7)",
     "emergencyBeds": 2,
@@ -251,20 +251,20 @@
     ]
   },
   {
-    "id": "chc-kalyanpur-04",
-    "name": "Kalyanpur Community Health Centre (CHC)",
+    "id": "chc-shirur-04",
+    "name": "Shirur Community Health Centre (CHC)",
     "type": "CHC",
-    "district": "Chandauli",
-    "block": "Sakaldiha",
-    "address": "Kalyanpur Crossroad, Near Tehsil Office, Chandauli, UP - 232109",
+    "district": "Pune",
+    "block": "Shirur",
+    "address": "Shirur Crossroad, Near Tehsil Office, Pune, Maharashtra - 412210",
     "coordinates": {
-      "lat": 25.334,
-      "lng": 83.2678
+      "lat": 18.8272,
+      "lng": 74.3789
     },
     "contact": {
-      "phone": "+91 94155 11223",
+      "phone": "+91 94225 11223",
       "emergencyHelpline": "108",
-      "ambulance": "+91 94155 11299"
+      "ambulance": "+91 94225 11299"
     },
     "operatingHours": "24x7 Emergency / OPD: 08:00 AM - 02:00 PM",
     "emergencyBeds": 8,
@@ -331,20 +331,20 @@
     ]
   },
   {
-    "id": "phc-madhupur-05",
-    "name": "Madhupur Primary Health Centre (PHC)",
+    "id": "phc-shahapur-05",
+    "name": "Shahapur Model Primary Health Centre (PHC)",
     "type": "PHC",
-    "district": "Prayagraj",
-    "block": "Koraon Rural",
-    "address": "Village Madhupur Post Koraon, Prayagraj, UP - 212306",
+    "district": "Thane",
+    "block": "Shahapur Rural",
+    "address": "Post Shahapur, Highway Junction, Thane, Maharashtra - 421601",
     "coordinates": {
-      "lat": 24.9812,
-      "lng": 82.062
+      "lat": 19.4542,
+      "lng": 73.3275
     },
     "contact": {
-      "phone": "+91 94518 99887",
+      "phone": "+91 94228 99887",
       "emergencyHelpline": "108",
-      "ambulance": "+91 94518 99899"
+      "ambulance": "+91 94228 99899"
     },
     "operatingHours": "24x7 First Aid / OPD: 08:00 AM - 02:00 PM",
     "emergencyBeds": 3,

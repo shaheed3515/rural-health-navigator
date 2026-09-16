@@ -413,9 +413,10 @@ export default function App() {
     return results;
   };
 
-  const triggerLiveDiscovery = (radiusKm = searchRadius / 1000) => {
+  const triggerLiveDiscovery = (radiusKm = searchRadius / 1000, onComplete = null) => {
     if (!navigator.geolocation) {
       showToast('Geolocation is not supported by your browser.', 'warning');
+      if (onComplete) onComplete(null, []);
       return;
     }
 
@@ -433,9 +434,11 @@ export default function App() {
           } else {
             showToast(`0 hospitals found within ${radiusKm}km. Expand radius to discover more.`, 'info');
           }
+          if (onComplete) onComplete(coords, realHospitals);
         } catch (err) {
           console.error('Overpass live discovery error:', err);
           setFacilities([]);
+          if (onComplete) onComplete(coords, []);
         } finally {
           setIsLocating(false);
         }
@@ -445,6 +448,7 @@ export default function App() {
         setLoading(false);
         setIsLocating(false);
         showToast('Location permission denied or timed out. Please click "Locate My Position".', 'warning');
+        if (onComplete) onComplete(null, null);
       },
       { enableHighAccuracy: true, timeout: 15000 }
     );
@@ -661,27 +665,66 @@ export default function App() {
     setChatLoading(true);
 
     try {
+      const detectedCityOrDistrict = (facilities[0]?.district && facilities[0].district !== 'Nearby Healthcare')
+        ? facilities[0].district
+        : (selectedDistrict || (userLocation ? `${userLocation.lat.toFixed(2)}°, ${userLocation.lng.toFixed(2)}°` : ''));
+
+      const telemetryContext = {
+        coords: userLocation, // { lat, lng }
+        locationName: detectedCityOrDistrict,
+        nearbyFacilities: (facilities || []).slice(0, 5).map((f) => ({
+          name: f.name,
+          distance: f.distance ? `${f.distance} km` : (f.distanceKm ? `${f.distanceKm} km` : 'nearby'),
+          beds: f.beds || f.emergencyBeds || 0,
+          type: f.type || 'Healthcare Facility'
+        }))
+      };
+
       const res = await apiFetch('/api/chat', {
         method: 'POST',
-        body: {
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           message: prompt,
           language,
-          image: imgPayload
-        }
+          image: imgPayload,
+          context: telemetryContext
+        })
       });
 
       const data = await res.json();
       if (data.success && data.reply) {
+        const rawReply = data.reply;
+        const hasLocationAction = rawReply.includes('[ACTION:GET_LOCATION]');
+        const cleanReply = rawReply.replace(/\[ACTION:GET_LOCATION\]/g, '').trim();
+
         setChatMessages((prev) => [
           ...prev,
           {
             id: Date.now() + 1,
             sender: 'bot',
-            text: data.reply,
+            text: cleanReply,
             source: data.source || 'gemini-grounded',
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           }
         ]);
+
+        if (hasLocationAction) {
+          triggerLiveDiscovery(searchRadius / 1000, (coords, realHospitals) => {
+            if (coords) {
+              const count = realHospitals?.length || 0;
+              setChatMessages((prev) => [
+                ...prev,
+                {
+                  id: Date.now() + 2,
+                  sender: 'bot',
+                  text: `📍 **Live GPS Detected:** (${coords.lat.toFixed(4)}°, ${coords.lng.toFixed(4)}°)\nI have synchronized your location and retrieved **${count} verified healthcare facilities** nearby on the live map.`,
+                  source: 'system-gps',
+                  time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                }
+              ]);
+            }
+          });
+        }
       } else {
         throw new Error(data.error || 'No reply from clinical assistant');
       }

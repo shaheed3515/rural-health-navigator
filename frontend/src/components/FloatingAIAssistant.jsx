@@ -14,7 +14,7 @@ export default function FloatingAIAssistant({
     {
       id: 1,
       sender: 'bot',
-      text: 'Hello! I am your Health AI Assistant. Ask me about doctors on duty, emergency beds, or medicine stock across UP PHCs & CHCs in Hindi, Telugu, or English.',
+      text: 'Hello! I am your Health AI Assistant. Ask me about doctors on duty, emergency beds, or medicine stock across primary and community health centres in Hindi, Marathi, Telugu, or English.',
       time: 'Just now',
       source: 'gemini-grounded'
     }
@@ -78,10 +78,12 @@ export default function FloatingAIAssistant({
 
       const data = await res.json();
       if (data.success && data.reply) {
+        const rawReply = data.reply;
+        const cleanReply = rawReply.replace(/\[ACTION:GET_LOCATION\]/g, '').trim();
         const botMsg = {
           id: Date.now() + 1,
           sender: 'bot',
-          text: data.reply,
+          text: cleanReply,
           source: data.source,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
