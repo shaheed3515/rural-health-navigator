@@ -155,14 +155,21 @@ function generateGroundedFallbackResponse(userMessage, preferredLang = "English"
     }
   }
 
-  // If user asks about nearby facilities
+  // Dynamic conversational guidance for healthcare facility questions
   if (q.includes("hospital") || q.includes("clinic") || q.includes("facility") || q.includes("nearby") || q.includes("bed") || q.includes("अस्पताल") || q.includes("नजदीक") || q.includes("दवाखाना")) {
-    if (nearbyFacilities.length > 0) {
-      const facLines = nearbyFacilities.map(f => "• **" + f.name + "** (" + (f.distance || "nearby") + ") — Beds: " + (f.beds || "On admission") + " [" + (f.type || "Facility") + "]").join("\n");
-      return "🏥 **Nearest Verified Healthcare Facilities in " + (locationName || "your area") + ":**\n\n" + facLines + "\n\nFor 24x7 emergency medical transport, dial **108** or **102**.";
-    } else {
-      return "🏥 Live GPS is currently scanning for nearby health centers in " + (locationName || "your area") + ". Please refer to the interactive live map cards on your screen, or visit your local government hospital / PHC. For acute emergencies, dial **108 (Ambulance)** or **102 (Maternal)** immediately.";
+    const matchesCity = q.match(/(?:in|near|at|around|for)\s+([a-zA-Z\s]{3,25})/i);
+    const queriedCity = matchesCity ? matchesCity[1].trim() : "";
+
+    if (queriedCity && queriedCity.toLowerCase() !== (locationName || "").toLowerCase()) {
+      return `For healthcare facilities in or around **${queriedCity}**, please consult the local Government General Hospital (GGH), District Hospital, or local Primary Health Centre (PHC). For emergency medical dispatch, dial **108** (Ambulance) or **102** (Maternal/Neonatal).`;
     }
+
+    if (nearbyFacilities.length > 0) {
+      const facSummary = nearbyFacilities.slice(0, 3).map(f => `${f.name} (${f.distance || 'nearby'})`).join(", ");
+      return `Based on your live location in ${locationName || 'your area'}, verified facilities include ${facSummary}. For 24x7 emergency medical transport, dial **108** or **102**.`;
+    }
+
+    return `I am scanning for verified health facilities in ${locationName || 'your area'}. You can check the live interactive map on your screen, or visit your local government hospital/PHC. For acute emergencies, dial **108 (Ambulance)** or **102 (Maternal)** immediately.`;
   }
 
   if (detectedLang === "Hindi") {
@@ -923,29 +930,16 @@ app.post("/api/chat", async (req, res) => {
     const locationName = context?.locationName || "";
     const nearbyFacilities = Array.isArray(context?.nearbyFacilities) ? context.nearbyFacilities : [];
 
-    let facilityGuidance = "";
-    if (nearbyFacilities.length > 0) {
-      const facList = nearbyFacilities.slice(0, 5).map((f, i) => 
-        `${i + 1}. ${f.name} (Distance: ${f.distance || 'nearby'}, Type: ${f.type || 'Facility'}, Beds: ${f.beds || 'Available'})`
-      ).join("\n");
-      facilityGuidance = `Recommend these exact facilities provided in context:\n${facList}`;
-    } else {
-      facilityGuidance = `Do NOT invent clinics from distant districts. Acknowledge the user's coordinates/city, state that live GPS is scanning for nearby health centers, and refer them to the interactive live map cards on their screen and 108 Emergency dispatch.`;
-    }
+    const systemInstruction = `You are an intelligent rural health assistant for Swasthya Sangam.
+User's detected location: ${locationName || 'Unknown'} (${coords?.lat || ''}, ${coords?.lng || ''}).
+Facilities nearby (if relevant to their immediate GPS): ${JSON.stringify(nearbyFacilities || [])}.
 
-    const systemInstruction = `You are the official Swasthya Sangam Rural Health & Triage AI Assistant (PS 26133). 
-You serve citizens and healthcare workers across ALL OF INDIA, with primary alignment to the Government of Maharashtra.
-When a user specifies ANY location (e.g., Kurnool, Pune, Nashik, or any other district), you MUST acknowledge their specific location and provide helpful clinical guidance and advise them to visit their local government hospital or PHC.
-NEVER mention Uttar Pradesh. NEVER state that your database only covers specific districts.
-Always provide emergency helpline numbers (108 Ambulance / 102 Maternal).
-
-LOCAL FACILITIES INSTRUCTIONS:
-${facilityGuidance}
-
-USER CONTEXT:
-- Location / District: ${locationName || 'Live User'}
-- Coordinates: ${coords ? `${coords.lat}, ${coords.lng}` : 'Pending live detection'}
-Respond warmly in the patient's preferred language (${language}, Marathi, Hindi, Telugu, or English).`;
+Rules:
+- If the user asks about a specific location (e.g. 'Anantapur', 'Pune', 'Kurnool'), answer dynamically about THAT specific city/region using your general medical knowledge. Do not force nearby GPS facilities from a different town.
+- If the user asks for 'nearby' care without specifying a city, refer to the provided nearby facilities context.
+- Speak conversationally and naturally. Never print a rigid template unless specifically asked.
+- Respond warmly in the patient's preferred language (${language}, Marathi, Hindi, Telugu, or English).
+- Always provide relevant emergency helpline numbers (108 Ambulance / 102 Maternal) when advising on urgent or hospital care.`;
 
     let imagePart = null;
     let hasImage = false;
@@ -993,7 +987,14 @@ Respond warmly in the patient's preferred language (${language}, Marathi, Hindi,
           contents.push(imagePart);
         }
 
-        const candidateModels = ["gemini-3.6-flash", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+        const candidateModels = [
+          "gemini-flash-lite-latest",
+          "gemini-3.5-flash-lite",
+          "gemini-3.1-flash-lite",
+          "gemini-3.8-flash",
+          "gemini-flash-latest",
+          "gemini-3-flash-preview"
+        ];
 
         const geminiCallPromise = (async () => {
           for (const modelName of candidateModels) {
