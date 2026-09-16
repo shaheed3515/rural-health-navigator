@@ -1,66 +1,61 @@
+import 'leaflet/dist/leaflet.css';
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-
-// Haversine distance in kilometers
-function getDistanceKm(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return Number((R * c).toFixed(1));
-}
 
 export default function FacilityMap({
   facilities = [],
-  onSelectFacility,
-  onBookToken,
-  onAskAI,
+  userLocation = null,
+  onUserLocationChange = null,
+  onSelectFacility = null,
+  onBookToken = null,
+  onAskAI = null,
+  selectedClinicId = null,
   language = 'English'
 }) {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersLayerRef = useRef(null);
-  const userMarkerRef = useRef(null);
+  const userLayerRef = useRef(null);
+  const markerMapRef = useRef(new Map());
 
-  const [selectedClinic, setSelectedClinic] = useState(null);
-  const [userLocation, setUserLocation] = useState(null);
+  const [activeClinic, setActiveClinic] = useState(null);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState(null);
 
-  // Initialize Leaflet Map
+  // 1. Initialize Leaflet Map with standard OSM tiles
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
     if (!mapInstanceRef.current) {
+      const initialLat = userLocation?.lat || 20;
+      const initialLng = userLocation?.lng || 0;
+      const initialZoom = userLocation ? 13 : 2;
+
       const map = L.map(mapContainerRef.current, {
-        center: [25.15, 82.85],
-        zoom: 9,
+        center: [initialLat, initialLng],
+        zoom: initialZoom,
         scrollWheelZoom: true,
         attributionControl: false
       });
 
+      // Standard OpenStreetMap tiles
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 18,
-        attribution: '&copy; OpenStreetMap contributors'
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19
       }).addTo(map);
 
-      L.control.attribution({ position: 'bottomright', prefix: 'Rural Health GIS' }).addTo(map);
+      L.control.attribution({ position: 'bottomright', prefix: 'Swasthya Sangam GIS' }).addTo(map);
 
       const markersLayer = L.layerGroup().addTo(map);
+      const userLayer = L.layerGroup().addTo(map);
       markersLayerRef.current = markersLayer;
+      userLayerRef.current = userLayer;
       mapInstanceRef.current = map;
 
-      // Force size invalidation so tiles never render gray
+      // Force size invalidation after initialization
       setTimeout(() => {
         map.invalidateSize();
-      }, 250);
+      }, 200);
     }
 
     return () => {
@@ -71,7 +66,7 @@ export default function FacilityMap({
     };
   }, []);
 
-  // Resize invalidation on mount / view switch
+  // Invalidate map size on view transitions or container mount
   useEffect(() => {
     const timer = setTimeout(() => {
       if (mapInstanceRef.current) {
@@ -81,7 +76,7 @@ export default function FacilityMap({
     return () => clearTimeout(timer);
   }, []);
 
-  // Request user geolocation
+  // Request browser geolocation
   const handleGetLocation = () => {
     setLocationError(null);
     if (!navigator.geolocation) {
@@ -94,139 +89,178 @@ export default function FacilityMap({
       (pos) => {
         const uLat = pos.coords.latitude;
         const uLng = pos.coords.longitude;
-        setUserLocation({ lat: uLat, lng: uLng });
+        const accuracy = pos.coords.accuracy || 100;
+        const loc = { lat: uLat, lng: uLng, accuracy };
         setLocating(false);
-
-        if (mapInstanceRef.current) {
-          // Remove previous user marker if any
-          if (userMarkerRef.current) {
-            mapInstanceRef.current.removeLayer(userMarkerRef.current);
-          }
-
-          // Blue user pulse pin
-          const userIcon = L.divIcon({
-            className: 'user-location-pin',
-            html: `
-              <div style="position: relative; display: flex; items-center; justify-content: center;">
-                <span style="position: absolute; width: 28px; height: 28px; border-radius: 9999px; background-color: #38bdf8; opacity: 0.75; animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
-                <div style="width: 20px; height: 20px; border-radius: 9999px; background-color: #0284c7; border: 3px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.3);"></div>
-              </div>
-            `,
-            iconSize: [28, 28],
-            iconAnchor: [14, 14]
-          });
-
-          const uMarker = L.marker([uLat, uLng], { icon: userIcon }).addTo(mapInstanceRef.current);
-          uMarker.bindPopup('<b>📍 Your Current Location</b>').openPopup();
-          userMarkerRef.current = uMarker;
-
-          mapInstanceRef.current.flyTo([uLat, uLng], 11, { duration: 1.2 });
+        if (onUserLocationChange) {
+          onUserLocationChange(loc);
         }
       },
       (err) => {
         setLocating(false);
-        // Fallback default coordinates (e.g. Varanasi City center: 25.3176, 82.9739)
-        const fallbackLat = 25.3176;
-        const fallbackLng = 82.9739;
-        setUserLocation({ lat: fallbackLat, lng: fallbackLng });
-        setLocationError('Permission denied or timeout. Defaulted to Varanasi district center (25.31° N, 82.97° E).');
+        setLocationError('GPS access was blocked. Click "Locate My Position" or enable browser location permission.');
       },
-      { timeout: 8000 }
+      { timeout: 10000, enableHighAccuracy: true }
     );
   };
 
-  // Sort facilities by distance if userLocation is active
-  const facilitiesWithDistance = facilities.map((clinic) => {
-    let dist = null;
-    if (userLocation && clinic.coordinates) {
-      dist = getDistanceKm(
-        userLocation.lat,
-        userLocation.lng,
-        Number(clinic.coordinates.lat),
-        Number(clinic.coordinates.lng)
+  // 2. Render pulsing soft blue circle for user's GPS location
+  useEffect(() => {
+    if (!mapInstanceRef.current || !userLayerRef.current) return;
+    const map = mapInstanceRef.current;
+    const userLayer = userLayerRef.current;
+    userLayer.clearLayers();
+
+    if (userLocation && userLocation.lat && userLocation.lng) {
+      const uLat = userLocation.lat;
+      const uLng = userLocation.lng;
+
+      // Outer accuracy halo
+      const accuracyCircle = L.circle([uLat, uLng], {
+        radius: Math.min(userLocation.accuracy || 400, 2000),
+        color: '#0284c7',
+        fillColor: '#38bdf8',
+        fillOpacity: 0.12,
+        weight: 1.5
+      });
+      userLayer.addLayer(accuracyCircle);
+
+      // Pulsing animated halo icon
+      const pulseDivIcon = L.divIcon({
+        className: 'gps-pulse-wrapper',
+        html: `
+          <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+            <span style="position: absolute; width: 36px; height: 36px; border-radius: 9999px; background-color: #38bdf8; opacity: 0.6; animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
+          </div>
+        `,
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
+      });
+      userLayer.addLayer(L.marker([uLat, uLng], { icon: pulseDivIcon, interactive: false }));
+
+      // Soft blue circle marker for exact location
+      const userMarker = L.circleMarker([uLat, uLng], {
+        radius: 9,
+        fillColor: '#0284c7',
+        color: '#ffffff',
+        weight: 3,
+        fillOpacity: 0.9
+      });
+      userMarker.bindPopup(
+        `<div style="font-family: system-ui, sans-serif; font-size: 12px; font-weight: 800; color: #1d68bd; padding: 2px;">
+          Your Real-Time Location
+        </div>`
       );
-    }
-    return { ...clinic, distanceKm: dist };
-  });
+      userLayer.addLayer(userMarker);
 
-  const sortedFacilities = [...facilitiesWithDistance].sort((a, b) => {
-    if (a.distanceKm !== null && b.distanceKm !== null) {
-      return a.distanceKm - b.distanceKm;
+      // Automatically call map.setView([userLocation.lat, userLocation.lng], 13) and invalidateSize
+      map.setView([uLat, uLng], 13);
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 200);
     }
-    return 0;
-  });
+  }, [userLocation]);
 
-  // Render facility markers on map
+  // 3. Render Discovered Facility Markers (Hospital #0284c7 vs Clinic #38bdf8)
   useEffect(() => {
     if (!mapInstanceRef.current || !markersLayerRef.current) return;
-
+    const map = mapInstanceRef.current;
     const layer = markersLayerRef.current;
     layer.clearLayers();
+    markerMapRef.current.clear();
 
     const bounds = [];
+    if (userLocation && userLocation.lat && userLocation.lng) {
+      bounds.push([userLocation.lat, userLocation.lng]);
+    }
 
-    sortedFacilities.forEach((clinic) => {
-      const lat = clinic.coordinates ? Number(clinic.coordinates.lat) : 25.3176;
-      const lng = clinic.coordinates ? Number(clinic.coordinates.lng) : 82.9739;
+    facilities.forEach((clinic) => {
+      const lat = clinic.coordinates ? Number(clinic.coordinates.lat) : clinic.lat;
+      const lng = clinic.coordinates ? Number(clinic.coordinates.lng) : clinic.lng;
 
       if (!isNaN(lat) && !isNaN(lng)) {
         bounds.push([lat, lng]);
 
-        const isHighBeds = clinic.emergencyBeds > 5;
-        const isZeroBeds = clinic.emergencyBeds === 0;
-        const colorClass = isZeroBeds ? '#e11d48' : isHighBeds ? '#059669' : '#d97706';
+        // Dynamic categorization by tags:
+        // Hospital: "General Hospital" (Blue pin #0284c7)
+        // Clinic/Doctors: "Primary Health Clinic" (Sky blue pin #38bdf8)
+        const nameLower = (clinic.name || '').toLowerCase();
+        const typeLower = (clinic.type || '').toLowerCase();
+        const isHospital =
+          typeLower.includes('hospital') ||
+          typeLower === 'chc' ||
+          nameLower.includes('hospital') ||
+          nameLower.includes('chc') ||
+          nameLower.includes('medical') ||
+          nameLower.includes('trauma');
+
+        const categoryLabel = isHospital ? 'General Hospital' : 'Primary Health Clinic';
+        const pinColor = isHospital ? '#1d68bd' : '#38bdf8';
+        const pinSvg = isHospital
+          ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>`
+          : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><line x1="8.5" y1="8.5" x2="15.5" y2="15.5"/></svg>`;
 
         const customIcon = L.divIcon({
           className: 'custom-facility-pin',
           html: `
-            <div style="position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-              <div style="width: 38px; height: 38px; border-radius: 14px; background-color: ${colorClass}; color: white; font-weight: 800; font-size: 11px; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
-                ${clinic.type}
-              </div>
-              <div style="position: absolute; top: -6px; right: -8px; background-color: #0f172a; color: white; font-size: 10px; font-weight: 800; border-radius: 9999px; padding: 2px 6px; border: 1.5px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
-                ${clinic.emergencyBeds}🛏️
+            <div style="position: relative; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.15s ease;">
+              <div style="width: 34px; height: 34px; border-radius: 10px; background-color: ${pinColor}; color: white; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 4px 10px rgba(29, 104, 189, 0.28);">
+                ${pinSvg}
               </div>
             </div>
           `,
-          iconSize: [38, 38],
-          iconAnchor: [19, 19],
-          popupAnchor: [0, -20]
+          iconSize: [34, 34],
+          iconAnchor: [17, 17],
+          popupAnchor: [0, -18]
         });
 
         const marker = L.marker([lat, lng], { icon: customIcon });
 
-        const distBadge = clinic.distanceKm !== null
-          ? `<span style="background-color: #ecfdf5; color: #047857; font-weight: 800; padding: 2px 6px; border-radius: 6px; font-size: 10px; border: 1px solid #a7f3d0;">📍 ${clinic.distanceKm} km</span>`
-          : '';
+        const distText =
+          clinic.distanceKm !== null && clinic.distanceKm !== undefined
+            ? `<span style="background-color: #e0edfd; color: #1d68bd; font-weight: 700; padding: 2px 7px; border-radius: 6px; font-size: 11px; border: 1px solid #bfdbfe;">${clinic.distanceKm} km away</span>`
+            : '';
+
+        const directionsUrl =
+          clinic.directionsUrl ||
+          `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
 
         const popupHtml = `
-          <div style="font-family: system-ui, sans-serif; min-width: 230px; padding: 4px;">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
-              <span style="font-size: 10px; font-weight: 800; color: #059669; text-transform: uppercase;">
-                ${clinic.type} • ${clinic.district}
+          <div style="font-family: system-ui, -apple-system, sans-serif; min-width: 250px; padding: 4px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; gap: 4px;">
+              <span style="font-size: 10px; font-weight: 800; color: ${pinColor}; text-transform: uppercase; letter-spacing: 0.5px;">
+                ${categoryLabel}
               </span>
-              ${distBadge}
+              ${distText}
             </div>
-            <div style="font-size: 13px; font-weight: bold; color: #0f172a; margin-top: 2px;">
+            <div style="font-size: 13px; font-weight: 800; color: #0f172a; line-height: 1.35;">
               ${clinic.name}
             </div>
-            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
-              ${clinic.address || clinic.block}
+            <div style="font-size: 11px; color: #64748b; margin-top: 3px;">
+              ${clinic.address || clinic.district || 'Local Health Sector'}
             </div>
-            <div style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; font-weight: bold;">
-              <span style="color: ${clinic.emergencyBeds > 0 ? '#059669' : '#e11d48'};">
-                🛏️ ${clinic.emergencyBeds} Emergency Beds
+            <div style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; font-size: 11px;">
+              <span style="color: #1d68bd; font-weight: 700;">
+                ${clinic.emergencyBeds !== undefined ? `${clinic.emergencyBeds} Beds` : 'Verified Centre'}
               </span>
-              <span style="color: #475569;">
-                📞 ${clinic.contact ? clinic.contact.phone : '108'}
+              <span style="color: #64748b; font-weight: 600;">
+                ${clinic.contact?.phone || 'Emergency: 108'}
               </span>
             </div>
-            <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #e2e8f0; display: flex; gap: 6px;">
-              <button
-                id="popup-book-btn-${clinic.id}"
-                style="flex: 1; padding: 6px 8px; background-color: #059669; color: white; border: none; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer;"
+            <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #e0edfd; display: flex; gap: 6px;">
+              <a
+                href="${directionsUrl}"
+                target="_blank"
+                rel="noopener noreferrer"
+                style="flex: 1; text-align: center; text-decoration: none; padding: 6px 8px; background-color: #f0f7ff; color: #1d68bd; border: 1px solid #bfdbfe; border-radius: 8px; font-size: 11px; font-weight: 700;"
               >
-                🎫 Book OPD Token
+                Directions
+              </a>
+              <button
+                id="popup-book-btn-${clinic.id || clinic._id}"
+                style="flex: 1.2; padding: 6px 8px; background-color: #1d68bd; color: white; border: none; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;"
+              >
+                Book Token
               </button>
             </div>
           </div>
@@ -235,9 +269,9 @@ export default function FacilityMap({
         marker.bindPopup(popupHtml);
 
         marker.on('popupopen', () => {
-          setSelectedClinic(clinic);
-          // Attach click event to the popup button
-          const btn = document.getElementById(`popup-book-btn-${clinic.id}`);
+          setActiveClinic(clinic);
+          if (onSelectFacility) onSelectFacility(clinic);
+          const btn = document.getElementById(`popup-book-btn-${clinic.id || clinic._id}`);
           if (btn) {
             btn.onclick = () => {
               if (onBookToken) onBookToken(clinic);
@@ -246,191 +280,159 @@ export default function FacilityMap({
         });
 
         marker.on('click', () => {
-          setSelectedClinic(clinic);
+          setActiveClinic(clinic);
           if (onSelectFacility) onSelectFacility(clinic);
         });
 
         layer.addLayer(marker);
+        markerMapRef.current.set(clinic.id, marker);
       }
     });
 
-    if (bounds.length > 0 && mapInstanceRef.current && !userLocation) {
-      mapInstanceRef.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
+    if (userLocation && userLocation.lat && map) {
+      map.setView([userLocation.lat, userLocation.lng], 13);
+    } else if (bounds.length > 0 && map) {
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
     }
-  }, [sortedFacilities, userLocation]);
 
-  const panToFacility = (clinic) => {
-    setSelectedClinic(clinic);
-    if (!mapInstanceRef.current || !clinic.coordinates) return;
-    const lat = Number(clinic.coordinates.lat);
-    const lng = Number(clinic.coordinates.lng);
-    if (!isNaN(lat) && !isNaN(lng)) {
-      mapInstanceRef.current.flyTo([lat, lng], 13, { duration: 1.2 });
+    setTimeout(() => {
+      if (map) map.invalidateSize();
+    }, 200);
+  }, [facilities, userLocation]);
+
+  // Center on selected clinic from card click
+  useEffect(() => {
+    if (!selectedClinicId || !mapInstanceRef.current) return;
+    const marker = markerMapRef.current.get(selectedClinicId);
+    if (marker) {
+      const latLng = marker.getLatLng();
+      mapInstanceRef.current.flyTo(latLng, 14, { duration: 1.2 });
+      marker.openPopup();
     }
-  };
+  }, [selectedClinicId]);
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xs flex flex-col lg:flex-row h-[640px]">
-      {/* Sidebar List of Facilities with Geolocation */}
-      <div className="w-full lg:w-84 border-b lg:border-b-0 lg:border-r border-slate-200 flex flex-col h-64 lg:h-full bg-slate-50/50">
-        {/* Geolocation Toolbar */}
-        <div className="p-3.5 bg-white border-b border-slate-200 space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-              <span>📍 Health Facility Map</span>
-            </div>
-            <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-              {facilities.length} Centres
-            </span>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleGetLocation}
-            disabled={locating}
-            className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-          >
-            <span>{locating ? '🔄' : '📍'}</span>
-            <span>{locating ? 'Detecting Location...' : 'Use My Current Location'}</span>
-          </button>
-
-          {locationError && (
-            <div className="text-[10px] text-amber-700 bg-amber-50 p-1.5 rounded-lg border border-amber-200">
-              {locationError}
-            </div>
+    <div className="bg-white rounded-2xl border border-[#e0f2fe] overflow-hidden shadow-sm flex flex-col relative w-full">
+      {/* Top Floating Controls Bar */}
+      <div className="absolute top-3 left-3 z-20 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={handleGetLocation}
+          disabled={locating}
+          className="px-3.5 py-2 bg-white/95 hover:bg-white text-slate-800 text-xs font-bold rounded-xl shadow-sm border border-[#bfdbfe] backdrop-blur-md flex items-center gap-2 transition cursor-pointer disabled:opacity-60"
+        >
+          {locating ? (
+            <svg className="animate-spin w-3.5 h-3.5 text-[#1d68bd]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+            </svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1d68bd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
           )}
-          {userLocation && !locationError && (
-            <div className="text-[10px] text-emerald-800 bg-emerald-50 p-1.5 rounded-lg border border-emerald-200 font-semibold flex items-center justify-between">
-              <span>GPS Active ({userLocation.lat.toFixed(2)}°, {userLocation.lng.toFixed(2)}°)</span>
-              <span>Sorted by distance</span>
-            </div>
-          )}
-        </div>
+          <span>{locating ? 'Detecting GPS...' : 'Locate My Position'}</span>
+        </button>
 
-        {/* Facilities list */}
-        <div className="flex-1 overflow-y-auto p-2.5 space-y-2">
-          {sortedFacilities.map((clinic) => {
-            const isSelected = selectedClinic && selectedClinic.id === clinic.id;
-            return (
-              <div
-                key={clinic.id}
-                onClick={() => panToFacility(clinic)}
-                className={`p-3 rounded-2xl border text-xs cursor-pointer transition ${
-                  isSelected
-                    ? 'bg-white border-emerald-500 shadow-sm ring-1 ring-emerald-500'
-                    : 'bg-white/80 border-slate-200 hover:border-slate-300 hover:bg-white'
-                }`}
-              >
-                <div className="flex items-center justify-between gap-1 mb-1">
-                  <div className="flex items-center gap-1.5">
-                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded uppercase ${
-                      clinic.type === 'CHC' ? 'bg-purple-100 text-purple-800' : 'bg-teal-100 text-teal-800'
-                    }`}>
-                      {clinic.type}
-                    </span>
-                    {clinic.distanceKm !== null && (
-                      <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                        📍 {clinic.distanceKm} km
-                      </span>
-                    )}
-                  </div>
-                  <span className={`text-[10px] font-bold ${clinic.emergencyBeds > 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
-                    🛏️ {clinic.emergencyBeds} Beds
-                  </span>
-                </div>
-
-                <div className="font-bold text-slate-900 leading-snug">{clinic.name}</div>
-                <div className="text-[11px] text-slate-500 mt-0.5">{clinic.district} • {clinic.block}</div>
-
-                <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-100 text-[11px]">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (onAskAI) onAskAI(clinic);
-                    }}
-                    className="text-slate-600 hover:text-slate-900 font-medium"
-                  >
-                    🤖 Ask AI
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (onBookToken) onBookToken(clinic);
-                    }}
-                    className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition"
-                  >
-                    🎫 Book Token
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Interactive Map Canvas */}
-      <div className="flex-1 relative h-full">
-        <div ref={mapContainerRef} className="w-full h-full z-10" />
-
-        {/* Legend Overlay */}
-        <div className="absolute top-3 right-3 z-20 bg-white/95 backdrop-blur-sm p-2.5 rounded-xl border border-slate-200 text-[11px] shadow-sm space-y-1 font-medium">
-          <div className="font-bold text-slate-800 text-[10px] uppercase tracking-wider mb-1">Emergency Bed Status</div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
-            <span>&gt;5 Emergency Beds</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-            <span>1–5 Emergency Beds</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-rose-600"></span>
-            <span>0 Beds Available</span>
-          </div>
-        </div>
-
-        {/* Quick Action Bottom Card */}
-        {selectedClinic && (
-          <div className="absolute bottom-4 left-4 right-4 z-20 bg-white/95 backdrop-blur-md p-4 rounded-2xl border border-slate-200 shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs animate-in fade-in duration-150">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-slate-900 text-sm">{selectedClinic.name}</span>
-                <span className="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]">
-                  {selectedClinic.district}
-                </span>
-                {selectedClinic.distanceKm !== null && (
-                  <span className="bg-emerald-50 text-emerald-700 font-extrabold px-2 py-0.5 rounded text-[10px] border border-emerald-200">
-                    📍 {selectedClinic.distanceKm} km away
-                  </span>
-                )}
-              </div>
-              <div className="text-slate-500 text-[11px] mt-0.5">
-                {selectedClinic.operatingHours} • Contact: {selectedClinic.contact ? selectedClinic.contact.phone : '108'}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => onAskAI && onAskAI(selectedClinic)}
-                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition cursor-pointer"
-              >
-                🤖 Ask AI Info
-              </button>
-              <button
-                type="button"
-                onClick={() => onBookToken && onBookToken(selectedClinic)}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition cursor-pointer"
-              >
-                🎫 Book OPD Token
-              </button>
-            </div>
-          </div>
+        {userLocation && (
+          <span className="px-3 py-1.5 bg-[#1d68bd] text-white font-bold text-[11px] rounded-xl shadow-xs backdrop-blur-md flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-sky-300"></span> GPS Active ({userLocation.lat.toFixed(2)}°, {userLocation.lng.toFixed(2)}°)
+          </span>
         )}
       </div>
+
+      {/* Clean 3-Item Light-Blue Legend */}
+      <div className="absolute top-3 right-3 z-20 bg-white/95 backdrop-blur-sm p-3 rounded-2xl border border-[#e0edfd] text-[11px] shadow-sm space-y-1.5 font-semibold text-slate-700">
+        <div className="font-extrabold text-[#1d68bd] text-[10px] uppercase tracking-wider mb-1">
+          Healthcare Network GIS
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-md bg-[#1d68bd] inline-block shadow-2xs"></span>
+          <span>Discovered Hospital / Health Centre</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-md bg-[#38bdf8] inline-block shadow-2xs"></span>
+          <span>Local Clinic / Dispensary</span>
+        </div>
+        <div className="flex items-center gap-2 pt-1 border-t border-[#e0edfd]">
+          <span className="w-3 h-3 rounded-full bg-[#1d68bd] border-2 border-white ring-2 ring-[#38bdf8] inline-block animate-pulse"></span>
+          <span className="text-[#1d68bd] font-bold">Your Real-Time Location</span>
+        </div>
+      </div>
+
+      {locationError && (
+        <div className="absolute top-16 left-3 z-20 bg-amber-50 border border-amber-200 text-amber-800 text-xs px-3 py-1.5 rounded-xl shadow-sm flex items-center gap-1.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600 shrink-0">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <span>{locationError}</span>
+        </div>
+      )}
+
+      {/* Leaflet Map Canvas with Explicit Required Dimensions */}
+      <div
+        ref={mapContainerRef}
+        style={{ height: '520px', width: '100%', borderRadius: '12px', zIndex: 1 }}
+      />
+
+      {/* Bottom Floating Active Selection Card */}
+      {activeClinic && (
+        <div className="p-3 bg-white border-t border-slate-100 flex items-center justify-between gap-4 flex-wrap z-10">
+          <div className="min-w-[200px]">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-slate-900 text-sm">{activeClinic.name}</span>
+              <span className="text-[10px] uppercase font-bold text-[#1d68bd] bg-[#e0edfd] px-2 py-0.5 rounded border border-[#bfdbfe]">
+                {((activeClinic.name || '').toLowerCase().includes('hospital') ||
+                activeClinic.type === 'GENERAL HOSPITAL' ||
+                activeClinic.type === 'chc')
+                  ? 'General Hospital'
+                  : 'Primary Health Clinic'}
+              </span>
+              {activeClinic.distanceKm !== null && activeClinic.distanceKm !== undefined && (
+                <span className="bg-[#e0edfd] text-[#1d68bd] font-extrabold px-2 py-0.5 rounded text-[10px] border border-[#bfdbfe]">
+                  {activeClinic.distanceKm} km away
+                </span>
+              )}
+            </div>
+            <div className="text-slate-500 text-[11px] mt-0.5">
+              {activeClinic.address || activeClinic.district} • Contact: {activeClinic.contact?.phone || '108'}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${
+                activeClinic.coordinates?.lat || activeClinic.lat
+              },${activeClinic.coordinates?.lng || activeClinic.lng}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-1.5 bg-[#f0f7ff] text-[#1d68bd] hover:bg-[#e0edfd] border border-[#bfdbfe] font-bold rounded-xl shadow-2xs transition text-xs flex items-center gap-1.5"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="3 11 22 2 13 21 11 13 3 11" />
+              </svg>
+              Directions
+            </a>
+
+            <button
+              type="button"
+              onClick={() => onBookToken && onBookToken(activeClinic)}
+              className="px-4 py-1.5 bg-[#1d68bd] hover:bg-[#15529a] text-white font-bold rounded-xl shadow-2xs transition text-xs flex items-center gap-1.5 cursor-pointer"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              Book OPD Token
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,184 +1,354 @@
-.counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
-  margin-bottom: 24px;
+/* ==========================================================================
+   Rural Health Access: Swasthya Sangam - Clean Light-Blue Clinical Design System
+   Fixed Viewport Architecture, Medical Tokens & Accessible Clinical Palette
+   ========================================================================== */
 
-  &:hover {
-    border-color: var(--accent-border);
-  }
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
+:root {
+  --primary-blue: #1d68bd;
+  --primary-blue-hover: #15529a;
+  --primary-blue-active: #0f3d73;
+  --primary-blue-light: #f0f7ff;
+  --primary-blue-subtle: #e0edfd;
+  --primary-blue-border: #bfdbfe;
+  --body-bg: #f0f6fc;
+  --card-bg: #ffffff;
+  --card-border: #e0edfd;
+  --card-shadow: 0 2px 8px rgba(29, 104, 189, 0.06);
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-subtle: #e2e8f0;
 }
 
-.hero {
-  position: relative;
-
-  .base,
-  .framework,
-  .vite {
-    inset-inline: 0;
-    margin: 0 auto;
-  }
-
-  .base {
-    width: 170px;
-    position: relative;
-    z-index: 0;
-  }
-
-  .framework,
-  .vite {
-    position: absolute;
-  }
-
-  .framework {
-    z-index: 1;
-    top: 34px;
-    height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
-  }
-
-  .vite {
-    z-index: 0;
-    top: 107px;
-    height: 26px;
-    width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
-  }
+/* Base Viewport Reset */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--body-bg);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-#center {
+#root {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* Master Fixed Viewport Layout Container */
+.portal-root {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
-
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
-  }
+  background-color: var(--body-bg);
 }
 
-#next-steps {
+/* Top Emergency Header Bar - Soft crisp medical sky-blue gradient (#0284c7 to #0ea5e9) */
+.emergency-ribbon {
+  height: 34px;
+  background: linear-gradient(90deg, #0284c7, #0ea5e9);
+  color: #ffffff;
+  padding: 0 16px;
+  font-size: 11px;
+  font-weight: 600;
   display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
-
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
-    }
-  }
-
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
-  }
-
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    text-align: center;
-  }
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  z-index: 50;
+  box-shadow: 0 1px 4px rgba(2, 132, 199, 0.15);
 }
 
-#docs {
-  border-right: 1px solid var(--border);
-
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-}
-
-#next-steps ul {
-  list-style: none;
-  padding: 0;
+/* 3-Column Fixed Grid / Flex Container */
+.layout-3col-container {
+  flex: 1;
+  height: calc(100vh - 34px);
   display: flex;
-  gap: 8px;
-  margin: 32px 0 0;
-
-  .logo {
-    height: 18px;
-  }
-
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
-  }
-}
-
-#spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
-  }
-}
-
-.ticks {
+  overflow: hidden;
   position: relative;
-  width: 100%;
+}
 
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
-  }
+/* Column A: Left Sidebar - Fixed 240px, Independent Scroll, No Page Drag */
+.sidebar-col {
+  width: 240px;
+  min-width: 240px;
+  max-width: 240px;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: #ffffff;
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-shrink: 0;
+  z-index: 40;
+}
 
-  &::before {
-    left: 0;
-    border-left-color: var(--border);
+/* Column B: Central Workspace - Independent Scroll Container */
+.workspace-col {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: var(--body-bg);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Column C: Right AI Panel - Docked Flush, Resizable Width */
+.ai-panel-col {
+  min-width: 320px;
+  max-width: 720px;
+  height: 100%;
+  overflow: hidden;
+  background-color: #ffffff;
+  border-left: 1px solid var(--card-border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  z-index: 40;
+  position: relative;
+}
+
+/* Buttons: Clinical Blue (#0284c7, hover #0369a1) */
+.btn-clinical-blue {
+  background-color: var(--primary-blue);
+  color: #ffffff;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn-clinical-blue:hover {
+  background-color: var(--primary-blue-hover);
+}
+.btn-clinical-blue:active {
+  background-color: var(--primary-blue-active);
+  transform: scale(0.98);
+}
+.btn-clinical-blue:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Status Badges: Light-blue pill (#e0f2fe, text: #0369a1) */
+.tag-blue-soft {
+  background-color: var(--primary-blue-subtle);
+  color: var(--primary-blue-hover);
+  border: 1px solid var(--primary-blue-border);
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 2px 8px;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Facility & Stock Cards: Pure white (#ffffff) with subtle border (#e0f2fe) and shadow */
+.clinical-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  box-shadow: var(--card-shadow);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.clinical-card:hover {
+  border-color: #bae6fd;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08);
+}
+
+/* AI Assistant Suggestion Pill */
+.ai-suggestion-pill {
+  background-color: #f0f7ff;
+  border: 1px solid #bfdbfe;
+  color: #1d68bd;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ai-suggestion-pill:hover {
+  background-color: #e0edfd;
+  border-color: #93c5fd;
+  color: #15529a;
+}
+
+/* Chat Message Bubbles */
+.chat-bubble-bot {
+  background-color: #ffffff;
+  border: 1px solid var(--card-border);
+  color: #1e293b;
+  border-radius: 14px;
+  border-bottom-left-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.chat-bubble-user {
+  background-color: var(--primary-blue);
+  color: #ffffff;
+  border-radius: 14px;
+  border-bottom-right-radius: 2px;
+  box-shadow: 0 1px 3px rgba(2, 132, 199, 0.25);
+}
+
+/* Independent Scrollbars */
+.workspace-col::-webkit-scrollbar,
+.sidebar-col::-webkit-scrollbar,
+.ai-panel-col::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.workspace-col::-webkit-scrollbar-track,
+.sidebar-col::-webkit-scrollbar-track,
+.ai-panel-col::-webkit-scrollbar-track {
+  background: transparent;
+}
+.workspace-col::-webkit-scrollbar-thumb,
+.sidebar-col::-webkit-scrollbar-thumb,
+.ai-panel-col::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+.workspace-col::-webkit-scrollbar-thumb:hover,
+.sidebar-col::-webkit-scrollbar-thumb:hover,
+.ai-panel-col::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Quick-Action Navigation Card */
+.quick-action-card {
+  background-color: #ffffff;
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: var(--card-shadow);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.quick-action-card:hover {
+  border-color: var(--primary-blue-border);
+  background-color: #fbfdff;
+  box-shadow: 0 4px 14px -2px rgba(2, 132, 199, 0.12);
+  transform: translateY(-1px);
+}
+
+/* Subtle Soft-Blue Bottom-Right Toast */
+.subtle-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  background-color: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #0369a1;
+  padding: 10px 16px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(2, 132, 199, 0.18), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: slideInUp 0.25s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
   }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
+}
+
+/* ========================================================= */
+/* RESIZABLE AI DRAWER & FULL-VIEW CLINICAL WORKSPACE STYLES */
+/* ========================================================= */
+
+/* Left Drag Resizer on Docked Right Drawer */
+.ai-resize-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 50;
+  background: transparent;
+  transition: background-color 0.15s ease;
+}
+
+.ai-resize-handle:hover,
+.ai-resize-handle:active {
+  background-color: var(--primary-blue-border);
+}
+
+/* Dedicated Full-View AI Assistant Grid */
+.ai-fullview-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .ai-fullview-grid {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+}
+
+/* Prescription & Medication Box Dropzone */
+.ai-dropzone-box {
+  border: 2px dashed #bfdbfe;
+  background-color: #f8fafc;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.ai-dropzone-box:hover,
+.ai-dropzone-box.drag-over {
+  background-color: #f0f7ff;
+  border-color: #1d68bd;
+  box-shadow: 0 4px 12px rgba(29, 104, 189, 0.08);
+}
+
+/* Voice Input Mic Pulse Animation */
+.ai-voice-active {
+  animation: pulse-voice 1.5s infinite;
+  background-color: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+@keyframes pulse-voice {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
