@@ -993,38 +993,47 @@ Respond warmly in the patient's preferred language (${language}, Marathi, Hindi,
           contents.push(imagePart);
         }
 
-        let response = null;
-        let usedModel = "gemini-3.6-flash";
-        const candidateModels = ["gemini-3.6-flash", "gemini-2.5-flash", "gemini-2.0-flash"];
+        const candidateModels = ["gemini-3.6-flash", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
 
-        for (const modelName of candidateModels) {
-          try {
-            response = await clientToUse.models.generateContent({
-              model: modelName,
-              contents,
-              config: {
-                systemInstruction
+        const geminiCallPromise = (async () => {
+          for (const modelName of candidateModels) {
+            try {
+              const res = await clientToUse.models.generateContent({
+                model: modelName,
+                contents,
+                config: {
+                  systemInstruction
+                }
+              });
+              if (res && res.text) {
+                console.log(`[Gemini Success] Successfully generated response using model: ${modelName}`);
+                return { response: res, usedModel: modelName };
               }
-            });
-            if (response && response.text) {
-              usedModel = modelName;
-              console.log(`[Gemini Success] Successfully generated response using model: ${modelName}`);
-              break;
+            } catch (modelErr) {
+              console.warn(`[Model ${modelName} retry]:`, modelErr.message);
             }
-          } catch (modelErr) {
-            console.warn(`[Model ${modelName} retry]:`, modelErr.message);
           }
-        }
+          return null;
+        })();
 
-        const replyText = response && response.text ? response.text : null;
+        let timeoutId;
+        const timeoutPromise = new Promise((resolve) => {
+          timeoutId = setTimeout(() => {
+            console.warn("[Gemini Timeout]: Call exceeded 12 seconds, failing over to grounded fallback.");
+            resolve(null);
+          }, 12000);
+        });
 
-        if (replyText) {
+        const geminiResult = await Promise.race([geminiCallPromise, timeoutPromise]);
+        clearTimeout(timeoutId);
+
+        if (geminiResult && geminiResult.response && geminiResult.response.text) {
           return res.json({
             success: true,
-            source: usedModel,
+            source: geminiResult.usedModel,
             hasImage,
             language,
-            reply: replyText
+            reply: geminiResult.response.text
           });
         }
       } catch (err) {

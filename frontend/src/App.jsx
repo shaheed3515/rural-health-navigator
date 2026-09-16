@@ -670,17 +670,29 @@ export default function App() {
 
       const isFacilityRequest = /hospital|clinic|doctor|phc|chc|nearby|facility|facilities|bed|emergency|अस्पताल|दवाखाना|नजदीक|ఆసుపత్రి/i.test(prompt);
 
+      // Strict 2500ms timeout race for pre-flight GPS/facility check
       if (isFacilityRequest && (!currentFacilities || currentFacilities.length === 0 || isLocating)) {
-        // Await GPS/Overpass discovery resolution FIRST before dispatching to /api/chat
-        const discoveryResult = await new Promise((resolve) => {
-          triggerLiveDiscovery(searchRadius / 1000, (coords, realHospitals) => {
-            resolve({ coords, realHospitals });
+        try {
+          const discoveryPromise = new Promise((resolve) => {
+            triggerLiveDiscovery(searchRadius / 1000, (coords, realHospitals) => {
+              resolve({ coords, realHospitals });
+            });
           });
-        });
 
-        if (discoveryResult && discoveryResult.realHospitals && discoveryResult.realHospitals.length > 0) {
-          currentFacilities = discoveryResult.realHospitals;
-          currentCoords = discoveryResult.coords || currentCoords;
+          let timerId;
+          const timeoutPromise = new Promise((resolve) => {
+            timerId = setTimeout(() => resolve(null), 2500);
+          });
+
+          const discoveryResult = await Promise.race([discoveryPromise, timeoutPromise]);
+          clearTimeout(timerId);
+
+          if (discoveryResult && discoveryResult.realHospitals && discoveryResult.realHospitals.length > 0) {
+            currentFacilities = discoveryResult.realHospitals;
+            currentCoords = discoveryResult.coords || currentCoords;
+          }
+        } catch (raceErr) {
+          console.warn('Pre-flight discovery race fallback:', raceErr);
         }
       }
 
@@ -699,16 +711,27 @@ export default function App() {
         }))
       };
 
-      const res = await apiFetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: prompt,
-          language,
-          image: imgPayload,
-          context: telemetryContext
-        })
-      });
+      const abortController = new AbortController();
+      const abortTimeoutId = setTimeout(() => {
+        abortController.abort();
+      }, 15000);
+
+      let res;
+      try {
+        res = await apiFetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: abortController.signal,
+          body: JSON.stringify({
+            message: prompt,
+            language,
+            image: imgPayload,
+            context: telemetryContext
+          })
+        });
+      } finally {
+        clearTimeout(abortTimeoutId);
+      }
 
       const data = await res.json();
       if (data.success && data.reply) {
@@ -748,12 +771,15 @@ export default function App() {
         throw new Error(data.error || 'No reply from clinical assistant');
       }
     } catch (err) {
+      const isTimeout = err.name === 'AbortError' || err.message?.includes('aborted');
       setChatMessages((prev) => [
         ...prev,
         {
           id: Date.now() + 1,
           sender: 'bot',
-          text: 'Unable to process health query. For emergency conditions like severe trauma, chest pain, or snakebites, please dial 108 immediately.',
+          text: isTimeout
+            ? 'The medical assistant request timed out after 15 seconds. Please retry or check the nearby facilities map on your screen. For emergencies, dial 108 immediately.'
+            : 'Unable to process health query. For emergency conditions like severe trauma, chest pain, or snakebites, please dial 108 immediately.',
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
