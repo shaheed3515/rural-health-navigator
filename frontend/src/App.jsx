@@ -26,6 +26,8 @@ export default function App() {
     if (raw === 'contact' || raw === 'emergency-support' || raw === 'contact-us' || raw === 'emergency') {
       return { type: 'modal', modal: 'contact', hash: '#/contact' };
     }
+    if (raw === 'diagnostics') return { type: 'tab', tab: 'medicines', subTab: 'diagnostics', hash: '#/diagnostics' };
+    if (raw === 'cmo' || raw === 'admin') return { type: 'tab', tab: 'profile', role: 'admin', hash: '#/cmo' };
     const validTabs = ['dashboard', 'facilities', 'appointments', 'medicines', 'guidance', 'profile', 'ai-assistant'];
     if (validTabs.includes(raw)) return { type: 'tab', tab: raw, hash: `#/${raw}` };
     return null;
@@ -76,6 +78,19 @@ export default function App() {
         setLegalModal(parsed.modal);
       } else if (parsed && parsed.type === 'tab') {
         setActiveTab(parsed.tab);
+        if (parsed.subTab) {
+          setActiveLogisticsSubTab(parsed.subTab);
+        }
+        if (parsed.role === 'admin') {
+          setCurrentUser({
+            role: 'admin',
+            name: 'Dr. S. K. Verma',
+            fullName: 'Dr. S. K. Verma',
+            title: 'District Chief Medical Officer (CMO)',
+            phone: '+91 98230 11092',
+            district: 'Pune Rural Health Administration'
+          });
+        }
         setLegalModal(null);
       }
     };
@@ -104,6 +119,17 @@ export default function App() {
 
   // 2. User & Authentication State
   const [currentUser, setCurrentUser] = useState(() => {
+    const raw = (typeof window !== 'undefined' ? window.location.hash : '').replace(/^#\/?/, '').trim().toLowerCase();
+    if (raw === 'cmo' || raw === 'admin') {
+      return {
+        role: 'admin',
+        name: 'Dr. S. K. Verma',
+        fullName: 'Dr. S. K. Verma',
+        title: 'District Chief Medical Officer (CMO)',
+        phone: '+91 98230 11092',
+        district: 'Pune Rural Health Administration'
+      };
+    }
     const stored = getStoredUser();
     return (
       stored || {
@@ -280,6 +306,64 @@ export default function App() {
     { id: 6, name: 'Human Insulin Regular (Cold Chain)', category: 'Endocrine / Diabetes', facility: 'Cold-Chain Storage Unit', quantity: 75, status: 'In Stock', threshold: 25 },
     { id: 7, name: 'Normal Saline (IV 500ml)', category: 'Emergency / IV Fluids', facility: 'Emergency Trauma Hub', quantity: 320, status: 'In Stock', threshold: 50 },
     { id: 8, name: 'Oxytocin Injection (Maternal Care)', category: 'Maternal Care', facility: 'Maternity Wing Store', quantity: 85, status: 'In Stock', threshold: 30 }
+  ]);
+
+  // 9b. Diagnostic & Essential Lab Services Ledger (SIH Outcome Alignment)
+  const [activeLogisticsSubTab, setActiveLogisticsSubTab] = useState(() => {
+    const raw = (typeof window !== 'undefined' ? window.location.hash : '').replace(/^#\/?/, '').trim().toLowerCase();
+    return raw === 'diagnostics' ? 'diagnostics' : 'medicines';
+  });
+  const [diagnosticServices, setDiagnosticServices] = useState([
+    { id: 'diag-1', name: 'Hemoglobin (Hb) / Anemia Rapid Strip', category: 'Maternal & Blood', facility: 'Primary Health Centre (PHC)', status: 'Operational', readyTests: 180, turnaround: '15 mins', equipmentStatus: 'Calibrated & Ready', threshold: 40 },
+    { id: 'diag-2', name: 'Malaria Rapid Diagnostic Kit (Pv/Pf RDT)', category: 'Vector-Borne Disease', facility: 'Nearest CHC Emergency Hub', status: 'Operational', readyTests: 95, turnaround: '20 mins', equipmentStatus: 'Buffer Stock Ready', threshold: 30 },
+    { id: 'diag-3', name: 'Digital Blood Glucose (Glucometer)', category: 'NCD & Diabetes', facility: 'Primary Health Depot', status: 'Operational', readyTests: 320, turnaround: '5 mins', equipmentStatus: 'Functional & Tested', threshold: 50 },
+    { id: 'diag-4', name: '12-Lead Digital ECG Machine', category: 'Emergency & Cardiology', facility: 'Community Health Centre (CHC)', status: 'Operational', readyTests: 'Continuous', turnaround: '10 mins', equipmentStatus: 'Online / Tested Today', threshold: '24x7' },
+    { id: 'diag-5', name: 'Urine Albumin & Protein Dipstick (ANC)', category: 'Maternal Care', facility: 'Sub-Centre Clinic Store', status: 'Low Stock', readyTests: 25, turnaround: '10 mins', equipmentStatus: 'Depot Indent Placed', threshold: 30 },
+    { id: 'diag-6', name: 'Sputum Microscopy (TB / DOTS)', category: 'Pulmonary / TB', facility: 'Sub-District Hospital (SDH)', status: 'Operational', readyTests: 140, turnaround: '2 hours', equipmentStatus: 'Certified Lab Tech on Duty', threshold: 35 },
+    { id: 'diag-7', name: 'Obstetric Ultrasound (USG Sonography)', category: 'Maternal & Fetal Care', facility: 'Rural Civil Hospital', status: 'Operational', readyTests: '18 Slots', turnaround: 'Same Day', equipmentStatus: 'Radiologist On Duty', threshold: 'Daily' }
+  ]);
+
+  // 9c. High-Risk Patient Care & Follow-up Registry (SIH Maternal, Child & Chronic Outcome)
+  const [highRiskRegistry, setHighRiskRegistry] = useState([
+    {
+      id: 'hr-01',
+      category: 'Maternal Care (High-Risk Pregnancy)',
+      patientName: 'Sunita Devi',
+      age: 26,
+      abhaId: '91-4829-1049-3820',
+      village: 'Baramati Rural Sector 4',
+      condition: 'Severe Anemia (Hb 7.8 g/dL) + Gestational Hypertension',
+      assignedWorker: 'ASHA Worker Rekha Tai',
+      dueDate: 'Tomorrow (ANC Visit 3)',
+      urgency: 'High Priority',
+      actionTaken: 'Iron Sucrose Infusion Scheduled at PHC'
+    },
+    {
+      id: 'hr-02',
+      category: 'Child Health & Immunization',
+      patientName: 'Baby Aarav (14 Weeks)',
+      age: '3.5 Months',
+      abhaId: '91-1029-4820-9182',
+      village: 'Dindori Tribal Hamlet',
+      condition: 'Pentavalent-3 & Rotavirus-3 Vaccine Due',
+      assignedWorker: 'ANM Suman Maurya',
+      dueDate: 'Friday (Village Health Day)',
+      urgency: 'Scheduled',
+      actionTaken: 'Cold-Chain Vaccine Carrier Allocated'
+    },
+    {
+      id: 'hr-03',
+      category: 'Chronic NCD (Diabetes & HTN)',
+      patientName: 'Ramesh Patil',
+      age: 58,
+      abhaId: '91-7291-3820-1928',
+      village: 'Shirur Block',
+      condition: 'Type-2 Diabetes (BS 240 mg/dL) & Stage-2 HTN',
+      assignedWorker: 'CHO Alok Tripathy',
+      dueDate: 'Monday (Bi-Weekly Check)',
+      urgency: 'Active Monitoring',
+      actionTaken: 'Metformin & Amlodipine Refill Confirmed'
+    }
   ]);
 
   // ============================================================================
@@ -2243,100 +2327,218 @@ export default function App() {
             {activeTab === 'medicines' && (
               <div className="space-y-4">
                 <div className="clinical-card p-4 space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div>
-                      <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
-                        <span>{t('medicineDepotLedger')}</span>
-                        <span className="text-xs font-bold text-[#0284c7] bg-[#e0f2fe] px-2 py-0.5 rounded-full border border-[#bae6fd]">
-                          {t('liveSupplyChain')}
-                        </span>
-                      </h2>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        {t('medicineDepotDesc')}
-                      </p>
-                    </div>
-
-                    {isAdmin && (
-                      <span className="text-xs font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200 inline-flex items-center gap-1.5">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                        </svg>
-                        CMO Stock Management Active
+                  {/* Top Sub-Tab Switcher: Medicines Depot vs Diagnostic & Lab Services */}
+                  <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+                    <button
+                      onClick={() => setActiveLogisticsSubTab('medicines')}
+                      className={`px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-2 cursor-pointer transition ${
+                        activeLogisticsSubTab === 'medicines'
+                          ? 'bg-[#1d68bd] text-white shadow-xs'
+                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      }`}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" />
+                        <path d="m8.5 8.5 7 7" />
+                      </svg>
+                      <span>Essential Medicines Depot</span>
+                      <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                        activeLogisticsSubTab === 'medicines' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {filteredMedicines.length}
                       </span>
-                    )}
+                    </button>
+
+                    <button
+                      onClick={() => setActiveLogisticsSubTab('diagnostics')}
+                      className={`px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-2 cursor-pointer transition ${
+                        activeLogisticsSubTab === 'diagnostics'
+                          ? 'bg-[#1d68bd] text-white shadow-xs'
+                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      }`}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M6 18h8M3 22h18M14 2a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-4Z" />
+                        <path d="M10 8v8a2 2 0 0 0 2 2h2" />
+                      </svg>
+                      <span>Diagnostic & Lab Services</span>
+                      <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
+                        activeLogisticsSubTab === 'diagnostics' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {diagnosticServices.length}
+                      </span>
+                    </button>
                   </div>
 
-                  {/* Category Filter Pills */}
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-                    <span className="text-slate-400 font-bold text-[11px] shrink-0">Filter:</span>
-                    {[
-                      'All',
-                      'Emergency / Anti-Venom',
-                      'Antibiotic',
-                      'Analgesic & Antipyretic',
-                      'Hydration / Diarrhea',
-                      'Endocrine / Diabetes',
-                      'Post-Exposure Prophylaxis',
-                      'Maternal Care'
-                    ].map((cat) => (
-                      <button
-                        key={cat}
-                        onClick={() => setSelectedMedCategory(cat)}
-                        className={`px-2.5 py-1 rounded-lg border font-semibold whitespace-nowrap text-[11px] cursor-pointer transition ${
-                          selectedMedCategory === cat
-                            ? 'bg-[#0284c7] text-white border-[#0284c7] shadow-2xs'
-                            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
-                    <div className="clinical-card overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
-                      <thead>
-                        <tr className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
-                          <th className="py-3 px-4">{t('medColName')}</th>
-                          <th className="hidden md:table-cell py-3 px-3">{t('medColCategory')}</th>
-                          <th className="hidden sm:table-cell py-3 px-3">{t('medColFacility')}</th>
-                          <th className="py-3 px-3">{t('medColUnits')}</th>
-                          <th className="py-3 px-4">{t('medColStatus')}</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {filteredMedicines.map((med) => (
-                          <tr key={med.id} className="hover:bg-slate-50/80 transition">
-                            <td className="py-3 px-4 font-bold text-slate-900">
-                              <div>{med.name}</div>
-                              <div className="text-[10px] text-slate-400 font-normal">Buffer Threshold: {med.threshold} units</div>
-                            </td>
-                            <td className="hidden md:table-cell py-3 px-3 text-slate-600 font-medium">
-                              {med.category}
-                            </td>
-                            <td className="hidden sm:table-cell py-3 px-3 text-slate-600">
-                              <div className="font-semibold">{med.facility}</div>
-                            </td>
-                            <td className="py-3 px-3 font-mono font-bold text-slate-800 text-sm">
-                              {med.quantity.toLocaleString()} u
-                            </td>
-                            <td className="py-3 px-4">
-                              <span
-                                className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                                  med.status === 'In Stock'
-                                    ? 'bg-[#e0f2fe] text-[#0284c7] border border-[#bae6fd]'
-                                    : 'bg-amber-100 text-amber-800 border border-amber-200'
-                                }`}
-                              >
-                                {med.status}
-                              </span>
-                            </td>
-                          </tr>
+                  {activeLogisticsSubTab === 'medicines' ? (
+                    <>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                          <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
+                            <span>{t('medicineDepotLedger')}</span>
+                            <span className="text-xs font-bold text-[#0284c7] bg-[#e0f2fe] px-2 py-0.5 rounded-full border border-[#bae6fd]">
+                              {t('liveSupplyChain')}
+                            </span>
+                          </h2>
+                          <p className="text-[11px] text-slate-500 mt-0.5">
+                            {t('medicineDepotDesc')}
+                          </p>
+                        </div>
+
+                        {isAdmin && (
+                          <span className="text-xs font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded-xl border border-amber-200 inline-flex items-center gap-1.5">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                            </svg>
+                            CMO Stock Management Active
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Category Filter Pills */}
+                      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+                        <span className="text-slate-400 font-bold text-[11px] shrink-0">Filter:</span>
+                        {[
+                          'All',
+                          'Emergency / Anti-Venom',
+                          'Antibiotic',
+                          'Analgesic & Antipyretic',
+                          'Hydration / Diarrhea',
+                          'Endocrine / Diabetes',
+                          'Post-Exposure Prophylaxis',
+                          'Maternal Care'
+                        ].map((cat) => (
+                          <button
+                            key={cat}
+                            onClick={() => setSelectedMedCategory(cat)}
+                            className={`px-2.5 py-1 rounded-lg border font-semibold whitespace-nowrap text-[11px] cursor-pointer transition ${
+                              selectedMedCategory === cat
+                                ? 'bg-[#0284c7] text-white border-[#0284c7] shadow-2xs'
+                                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                            }`}
+                          >
+                            {cat}
+                          </button>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>              </div>
+                      </div>
+
+                      <div className="clinical-card overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-xs">
+                            <thead>
+                              <tr className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
+                                <th className="py-3 px-4">{t('medColName')}</th>
+                                <th className="hidden md:table-cell py-3 px-3">{t('medColCategory')}</th>
+                                <th className="hidden sm:table-cell py-3 px-3">{t('medColFacility')}</th>
+                                <th className="py-3 px-3">{t('medColUnits')}</th>
+                                <th className="py-3 px-4">{t('medColStatus')}</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                              {filteredMedicines.map((med) => (
+                                <tr key={med.id} className="hover:bg-slate-50/80 transition">
+                                  <td className="py-3 px-4 font-bold text-slate-900">
+                                    <div>{med.name}</div>
+                                    <div className="text-[10px] text-slate-400 font-normal">Buffer Threshold: {med.threshold} units</div>
+                                  </td>
+                                  <td className="hidden md:table-cell py-3 px-3 text-slate-600 font-medium">
+                                    {med.category}
+                                  </td>
+                                  <td className="hidden sm:table-cell py-3 px-3 text-slate-600">
+                                    <div className="font-semibold">{med.facility}</div>
+                                  </td>
+                                  <td className="py-3 px-3 font-mono font-bold text-slate-800 text-sm">
+                                    {med.quantity.toLocaleString()} u
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <span
+                                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                        med.status === 'In Stock'
+                                          ? 'bg-[#e0f2fe] text-[#0284c7] border border-[#bae6fd]'
+                                          : 'bg-amber-100 text-amber-800 border border-amber-200'
+                                      }`}
+                                    >
+                                      {med.status}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                          <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
+                            <span>Diagnostic & Essential Lab Test Coordination</span>
+                            <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
+                              Live Equipment Network
+                            </span>
+                          </h2>
+                          <p className="text-[11px] text-slate-500 mt-0.5">
+                            Real-time equipment functionality, test kit availability, and turnaround tracking at Primary Health Centres and CHCs.
+                          </p>
+                        </div>
+                        <div className="text-[11px] font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-xl">
+                          NHM Indian Public Health Standards (IPHS) Aligned
+                        </div>
+                      </div>
+
+                      <div className="clinical-card overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-xs">
+                            <thead>
+                              <tr className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
+                                <th className="py-3 px-4">Diagnostic Test / Investigation</th>
+                                <th className="hidden md:table-cell py-3 px-3">Clinical Domain</th>
+                                <th className="hidden sm:table-cell py-3 px-3">Designated Centre</th>
+                                <th className="py-3 px-3">Ready Capacity</th>
+                                <th className="hidden lg:table-cell py-3 px-3">Turnaround</th>
+                                <th className="py-3 px-4">Service Status</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                              {diagnosticServices.map((d) => (
+                                <tr key={d.id} className="hover:bg-slate-50/80 transition">
+                                  <td className="py-3 px-4 font-bold text-slate-900">
+                                    <div>{d.name}</div>
+                                    <div className="text-[10px] text-slate-400 font-normal">Equipment: {d.equipmentStatus}</div>
+                                  </td>
+                                  <td className="hidden md:table-cell py-3 px-3 text-slate-600 font-medium">
+                                    {d.category}
+                                  </td>
+                                  <td className="hidden sm:table-cell py-3 px-3 text-slate-600">
+                                    <div className="font-semibold">{d.facility}</div>
+                                  </td>
+                                  <td className="py-3 px-3 font-mono font-bold text-slate-800 text-sm">
+                                    {d.readyTests}
+                                  </td>
+                                  <td className="hidden lg:table-cell py-3 px-3 text-slate-500 font-medium">
+                                    {d.turnaround}
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <span
+                                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                        d.status === 'Operational'
+                                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                          : 'bg-amber-100 text-amber-800 border border-amber-200'
+                                      }`}
+                                    >
+                                      {d.status}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             )}
 
@@ -2449,6 +2651,160 @@ export default function App() {
                       ))}
                     </div>
                   )}
+                </div>
+
+                {/* Closed-Loop Referral Continuity Pipeline (SIH Requirement: Sub-centre -> PHC -> CHC -> District Hospital) */}
+                <div className="clinical-card p-5 space-y-4 bg-gradient-to-br from-white to-blue-50/40 border border-blue-100">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 pb-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-black text-slate-900">
+                          Closed-Loop Referral Tracking Pipeline
+                        </h3>
+                        <span className="px-2 py-0.5 rounded-full bg-[#1d68bd] text-white text-[10px] font-bold">
+                          Active Continuity Case
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Inter-tier continuum of care across Sub-Centres, PHCs, CHCs, and District Civil Hospitals without information fragmentation.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-[11px] bg-white text-slate-700 px-2.5 py-1 rounded-lg border border-slate-200 font-bold">
+                        Order #REF-MH-2026-0849
+                      </span>
+                      <span className="px-2.5 py-1 bg-amber-100 text-amber-900 rounded-lg text-[10px] font-bold">
+                        Urgent Maternal Care
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 4-Stage Visual Stepper */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+                    {/* Step 1 */}
+                    <div className="p-3 bg-white rounded-xl border border-emerald-200 shadow-2xs space-y-1 relative">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Stage 1: Sub-Centre</span>
+                        <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">✓</span>
+                      </div>
+                      <div className="font-bold text-slate-800 text-xs">ASHA Triage & Vitals</div>
+                      <div className="text-[10px] text-slate-500">BP 150/95 · Initial slip logged</div>
+                      <div className="text-[9px] text-slate-400 font-mono">08:15 AM · Completed</div>
+                    </div>
+
+                    {/* Step 2 */}
+                    <div className="p-3 bg-white rounded-xl border border-emerald-200 shadow-2xs space-y-1 relative">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Stage 2: Rural PHC</span>
+                        <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">✓</span>
+                      </div>
+                      <div className="font-bold text-slate-800 text-xs">Doctor Tele-Consult</div>
+                      <div className="text-[10px] text-slate-500">Dr. R. K. Gupta · Order signed</div>
+                      <div className="text-[9px] text-slate-400 font-mono">09:10 AM · Completed</div>
+                    </div>
+
+                    {/* Step 3 */}
+                    <div className="p-3 bg-[#f0f7ff] rounded-xl border-2 border-[#1d68bd] shadow-2xs space-y-1 relative animate-pulse">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-[#1d68bd] uppercase tracking-wider">Stage 3: Community CHC</span>
+                        <span className="w-5 h-5 rounded-full bg-[#1d68bd] text-white flex items-center justify-center font-bold text-xs">3</span>
+                      </div>
+                      <div className="font-bold text-slate-900 text-xs">Bed & Specialist Roster</div>
+                      <div className="text-[10px] text-slate-600 font-semibold">Bed #04 Reserved · OBGYN Alerted</div>
+                      <div className="text-[9px] text-[#1d68bd] font-bold">In-Transit via 108 Ambulance</div>
+                    </div>
+
+                    {/* Step 4 */}
+                    <div className="p-3 bg-white/60 rounded-xl border border-dashed border-slate-300 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Stage 4: District Hospital</span>
+                        <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-xs">4</span>
+                      </div>
+                      <div className="font-bold text-slate-500 text-xs">Secondary Care Admission</div>
+                      <div className="text-[10px] text-slate-400">Casualty desk notified via ABDM</div>
+                      <div className="text-[9px] text-slate-400 font-mono">Awaiting Arrival</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* High-Risk Patient Care & Follow-Up Registry (SIH Maternal, Child, Chronic Requirement) */}
+                <div className="clinical-card p-5 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-black text-slate-900">
+                          High-Risk Patient Care & Follow-Up Registry
+                        </h3>
+                        <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold border border-rose-200">
+                          Frontline ASHA & ANM Console
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Proactive follow-up tracking for maternal, child, and chronic conditions to reduce preventable mortality.
+                      </p>
+                    </div>
+
+                    <div className="text-xs font-bold text-slate-500">
+                      Active Follow-Ups: <span className="text-slate-900">{highRiskRegistry.length} patients</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
+                    {highRiskRegistry.map((item) => (
+                      <div key={item.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 flex flex-col justify-between">
+                        <div className="space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                              item.category.includes('Maternal')
+                                ? 'bg-pink-100 text-pink-800 border border-pink-200'
+                                : item.category.includes('Child')
+                                ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                                : 'bg-purple-100 text-purple-800 border border-purple-200'
+                            }`}>
+                              {item.category}
+                            </span>
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                              item.urgency === 'High Priority' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-800'
+                            }`}>
+                              {item.urgency}
+                            </span>
+                          </div>
+
+                          <div>
+                            <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                              <span>{item.patientName}</span>
+                              <span className="text-[10px] text-slate-400 font-normal">({item.age})</span>
+                            </div>
+                            <div className="font-mono text-[10px] text-[#1d68bd] mt-0.5">
+                              ABHA: {item.abhaId}
+                            </div>
+                          </div>
+
+                          <div className="p-2.5 rounded-xl bg-white border border-slate-200 text-[11px] space-y-1">
+                            <div><strong>Condition:</strong> {item.condition}</div>
+                            <div><strong>Follow-up Due:</strong> <span className="text-red-700 font-bold">{item.dueDate}</span></div>
+                            <div className="text-slate-500"><strong>Worker:</strong> {item.assignedWorker}</div>
+                          </div>
+                        </div>
+
+                        <div className="pt-2 border-t border-slate-200 flex items-center justify-between gap-2">
+                          <button
+                            onClick={() => showToast(`SMS follow-up dispatched to ${item.patientName} & worker.`, 'success')}
+                            className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                          >
+                            SMS Alert
+                          </button>
+                          <button
+                            onClick={() => showToast(`Follow-up consultation logged for ${item.patientName}.`, 'success')}
+                            className="px-2.5 py-1.5 bg-[#1d68bd] hover:bg-[#15529a] text-white rounded-lg text-[10px] font-bold transition cursor-pointer"
+                          >
+                            Log Visit Complete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -2564,41 +2920,160 @@ export default function App() {
             {/* VIEW 6: MY PROFILE / CMO ADMIN PORTAL */}
             {/* ========================================================= */}
             {activeTab === 'profile' && (
-              <div className="space-y-4 max-w-2xl mx-auto">
-                <div className="clinical-card p-6 space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="space-y-5 max-w-4xl mx-auto">
+                {/* Account & Role Card */}
+                <div className="clinical-card p-5 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
                     <div>
-                      <h2 className="text-base font-black text-slate-900">User Profile & Access Level</h2>
-                      <p className="text-[11px] text-slate-500">Citizen Beneficiary or District Health Administration Portal.</p>
+                      <h2 className="text-base font-black text-slate-900">User Identity & Clinical Access Level</h2>
+                      <p className="text-[11px] text-slate-500">Authenticated via Ayushman Bharat Digital Mission (ABDM) Role-Based Access Control.</p>
                     </div>
-                    <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
-                      isAdmin ? 'bg-amber-100 text-amber-900' : 'bg-[#e0f2fe] text-[#0284c7]'
+                    <span className={`px-3 py-1 rounded-xl text-xs font-bold w-fit ${
+                      isAdmin ? 'bg-amber-100 text-amber-900 border border-amber-200' : 'bg-[#e0f2fe] text-[#0284c7] border border-[#bae6fd]'
                     }`}>
-                      {isAdmin ? 'CMO Administrator' : 'Citizen Patient'}
+                      {isAdmin ? '★ District CMO Administrator' : 'Citizen Patient Beneficiary'}
                     </span>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
-                    <div><strong>Name:</strong> {currentUser.fullName || currentUser.name}</div>
-                    <div><strong>Phone:</strong> {currentUser.phone || 'Not registered (Guest)'}</div>
-                    <div><strong>Role:</strong> {currentUser.role === 'admin' ? 'District CMO Officer' : 'Patient Citizen'}</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                      <div className="text-[10px] text-slate-400 font-bold uppercase">Authorized User</div>
+                      <div className="font-bold text-slate-900 text-sm mt-0.5">{currentUser.fullName || currentUser.name}</div>
+                      <div className="text-[11px] text-slate-500">{currentUser.phone || '+91 98230 44102'}</div>
+                    </div>
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                      <div className="text-[10px] text-slate-400 font-bold uppercase">ABDM Identifiers</div>
+                      <div className="font-mono font-bold text-[#1d68bd] text-xs mt-0.5">ABHA: 91-4829-1049-3820</div>
+                      <div className="text-[10px] text-slate-500 font-mono">swasthya.citizen@abdm</div>
+                    </div>
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                      <div className="text-[10px] text-slate-400 font-bold uppercase">Assigned Division</div>
+                      <div className="font-bold text-slate-800 text-xs mt-0.5">Maharashtra Public Health</div>
+                      <div className="text-[10px] text-emerald-700 font-bold">● Operational Status: Active</div>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 pt-2">
+                  <div className="flex items-center gap-3 pt-1">
                     <button
                       onClick={() => setShowAuthModal(true)}
-                      className="py-2.5 bg-[#e0f2fe] text-[#0284c7] hover:bg-[#dbeafe] border border-[#bae6fd] font-bold text-xs rounded-xl transition cursor-pointer"
+                      className="px-4 py-2 bg-[#e0f2fe] text-[#0284c7] hover:bg-[#dbeafe] border border-[#bae6fd] font-bold text-xs rounded-xl transition cursor-pointer"
                     >
-                      Switch Role / Login
+                      Switch Role / Re-Authenticate
                     </button>
                     <button
                       onClick={handleLogout}
-                      className="py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl border border-rose-200 cursor-pointer"
+                      className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl border border-rose-200 transition cursor-pointer"
                     >
                       Sign Out
                     </button>
                   </div>
                 </div>
+
+                {/* IF ADMIN: District CMO Quality & Performance Dashboard */}
+                {isAdmin ? (
+                  <div className="clinical-card p-5 space-y-4 bg-gradient-to-br from-white to-amber-50/30 border border-amber-200/80">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-black text-slate-900">
+                            District CMO Quality & Performance Monitoring Console
+                          </h3>
+                          <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold">
+                            Live Audit
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          Real-time institutional indicators for care continuity, referral completion, and stockout prevention.
+                        </p>
+                      </div>
+                      <span className="text-[11px] font-mono text-slate-500 bg-white px-2.5 py-1 rounded-lg border border-slate-200">
+                        Division ID: MH-PHD-DIST-04
+                      </span>
+                    </div>
+
+                    {/* 4 KPI Metrics */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                      <div className="p-3.5 bg-white rounded-xl border border-slate-200 shadow-2xs space-y-1">
+                        <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Referral Completion</div>
+                        <div className="text-2xl font-black text-emerald-700">91.4%</div>
+                        <div className="text-[10px] text-emerald-600 font-semibold">▲ +34% vs paper slips</div>
+                      </div>
+
+                      <div className="p-3.5 bg-white rounded-xl border border-slate-200 shadow-2xs space-y-1">
+                        <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Avg Triage Time</div>
+                        <div className="text-2xl font-black text-[#1d68bd]">18 min</div>
+                        <div className="text-[10px] text-[#1d68bd] font-semibold">▼ Down from 4.2 hours</div>
+                      </div>
+
+                      <div className="p-3.5 bg-white rounded-xl border border-slate-200 shadow-2xs space-y-1">
+                        <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">ASV & Drug Buffer</div>
+                        <div className="text-2xl font-black text-slate-800">96.2%</div>
+                        <div className="text-[10px] text-slate-500">Zero stockout in 90 days</div>
+                      </div>
+
+                      <div className="p-3.5 bg-white rounded-xl border border-slate-200 shadow-2xs space-y-1">
+                        <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Maternal Follow-Up</div>
+                        <div className="text-2xl font-black text-pink-700">94.8%</div>
+                        <div className="text-[10px] text-pink-600 font-semibold">14 Rural Sub-Centres</div>
+                      </div>
+                    </div>
+
+                    {/* Network Tier Summary */}
+                    <div className="p-3.5 bg-white rounded-xl border border-slate-200 text-xs space-y-2">
+                      <div className="font-bold text-slate-800 flex items-center justify-between">
+                        <span>Connected Public Health Tier Network</span>
+                        <span className="text-[10px] text-emerald-700 font-mono">100% Online Sync</span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-600">
+                        <div className="p-2 bg-slate-50 rounded-lg"><strong>14</strong> Sub-Centres (ASHA)</div>
+                        <div className="p-2 bg-slate-50 rounded-lg"><strong>5</strong> Primary Health (PHC)</div>
+                        <div className="p-2 bg-slate-50 rounded-lg"><strong>2</strong> Community Health (CHC)</div>
+                        <div className="p-2 bg-slate-50 rounded-lg"><strong>1</strong> Civil Hospital (SDH)</div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* IF CITIZEN: Ayushman Bharat Digital Health Card (ABHA) */
+                  <div className="clinical-card p-5 space-y-4 bg-gradient-to-br from-white to-blue-50/40 border border-blue-100">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-black text-slate-900">
+                            Ayushman Bharat Digital Health Card (ABHA)
+                          </h3>
+                          <span className="px-2 py-0.5 rounded-full bg-[#1d68bd] text-white text-[10px] font-bold">
+                            ABDM M1 & M2 Verified
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          National Digital Health Mission standardized interoperable health record identifier.
+                        </p>
+                      </div>
+                      <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-lg">
+                        Consent: Active (DPDP Act 2023)
+                      </span>
+                    </div>
+
+                    <div className="p-4 bg-white rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div className="space-y-1.5 text-xs">
+                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Universal Health ID</div>
+                        <div className="text-lg font-mono font-black text-[#1d68bd]">91-4829-1049-3820</div>
+                        <div className="text-slate-700"><strong>Beneficiary:</strong> {currentUser.fullName || 'Citizen Beneficiary'}</div>
+                        <div className="text-slate-500 text-[11px]">Linked to 108 Ambulance SOS, OPD passes, and child immunization ledger.</div>
+                      </div>
+
+                      <div className="w-24 h-24 bg-slate-100 rounded-xl border border-slate-200 flex flex-col items-center justify-center text-center p-2 shrink-0">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-slate-700">
+                          <rect x="3" y="3" width="7" height="7" />
+                          <rect x="14" y="3" width="7" height="7" />
+                          <rect x="14" y="14" width="7" height="7" />
+                          <rect x="3" y="14" width="7" height="7" />
+                        </svg>
+                        <span className="text-[8px] text-slate-500 font-mono mt-1">SCAN ABHA</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
