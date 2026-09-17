@@ -2,6 +2,10 @@
   "version": 2,
   "rewrites": [
     {
+      "source": "/api/(.*)",
+      "destination": "https://rural-health-navigator.onrender.com/api/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/"
     }

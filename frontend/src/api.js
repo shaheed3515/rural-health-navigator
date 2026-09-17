@@ -3,7 +3,12 @@
  * Supports both local development (Vite proxy) and multi-host cloud deployment (Vercel + Render)
  */
 
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+export const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ||
+  (typeof window !== "undefined" && window.location.hostname.includes("vercel.app")
+    ? "https://rural-health-navigator.onrender.com"
+    : "")
+).replace(/\/$/, "");
 
 const TOKEN_KEY = "health_auth_token";
 const USER_KEY = "health_auth_user";

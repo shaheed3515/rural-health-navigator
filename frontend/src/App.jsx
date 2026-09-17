@@ -409,7 +409,7 @@ export default function App() {
     setLoading(true);
     const radiusMeters = radiusKm * 1000;
     const overpassQuery = `
-      [out:json][timeout:25];
+      [out:json][timeout:10];
       (
         node["amenity"~"hospital|clinic|doctors"](around:${radiusMeters},${lat},${lng});
         way["amenity"~"hospital|clinic|doctors"](around:${radiusMeters},${lat},${lng});
@@ -426,18 +426,48 @@ export default function App() {
 
     let data = null;
     for (const ep of endpoints) {
+      const ctrl = new AbortController();
+      const timeoutId = setTimeout(() => ctrl.abort(), 3500);
       try {
-        const res = await fetch(`${ep}?data=${encodeURIComponent(overpassQuery)}`);
+        const res = await fetch(`${ep}?data=${encodeURIComponent(overpassQuery)}`, {
+          signal: ctrl.signal
+        });
+        clearTimeout(timeoutId);
         if (res.ok) {
           data = await res.json();
           if (data?.elements?.length > 0) break;
         }
       } catch (e) {
-        console.warn(`Overpass endpoint ${ep} failed, trying next fallback...`);
+        clearTimeout(timeoutId);
+        console.warn(`Overpass endpoint ${ep} failed or timed out, trying next fallback...`);
       }
     }
 
-    if (!data || !data.elements) {
+    // If Overpass returned 0 elements or failed, immediately fallback to verified backend facilities
+    if (!data || !data.elements || data.elements.length === 0) {
+      try {
+        const fallbackRes = await apiFetch('/api/facilities');
+        const fallbackData = await fallbackRes.json();
+        const fallbackList = Array.isArray(fallbackData) ? fallbackData : (fallbackData?.facilities || []);
+        if (fallbackList.length > 0) {
+          const mapped = fallbackList.map((f) => {
+            const fLat = f.coordinates?.lat || lat;
+            const fLng = f.coordinates?.lng || lng;
+            const dist = getDistanceKm(lat, lng, fLat, fLng);
+            return {
+              ...f,
+              distance: parseFloat(dist.toFixed(1)),
+              distanceKm: parseFloat(dist.toFixed(1)),
+              lat: fLat,
+              lng: fLng
+            };
+          }).sort((a, b) => a.distance - b.distance);
+          setLoading(false);
+          return mapped;
+        }
+      } catch (fbErr) {
+        console.warn('Backend facilities fallback error:', fbErr);
+      }
       setLoading(false);
       return [];
     }
@@ -509,43 +539,74 @@ export default function App() {
   };
 
   const triggerLiveDiscovery = (radiusKm = searchRadius / 1000, onComplete = null) => {
+    setIsLocating(true);
+
     if (!navigator.geolocation) {
-      showToast('Geolocation is not supported by your browser.', 'warning');
-      if (onComplete) onComplete(null, []);
+      console.warn('Geolocation not supported by browser; using regional center.');
+      const defaultCoords = { lat: 18.5204, lng: 73.8567 };
+      setUserLocation(defaultCoords);
+      fetchRealHospitals(defaultCoords.lat, defaultCoords.lng, radiusKm).then((res) => {
+        if (res && res.length > 0) setFacilities(res);
+        setLoading(false);
+        setIsLocating(false);
+        if (onComplete) onComplete(defaultCoords, res);
+      });
       return;
     }
 
-    setIsLocating(true);
+    let resolved = false;
+    const gpsSafetyTimeout = setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        console.warn('GPS hardware response delayed; activating regional health fallback.');
+        const fallbackCoords = userLocation || { lat: 18.5204, lng: 73.8567 };
+        setUserLocation(fallbackCoords);
+        fetchRealHospitals(fallbackCoords.lat, fallbackCoords.lng, radiusKm).then((res) => {
+          if (res && res.length > 0) setFacilities(res);
+          setLoading(false);
+          setIsLocating(false);
+          if (onComplete) onComplete(fallbackCoords, res);
+        });
+      }
+    }, 5000);
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
+        if (resolved) return;
+        resolved = true;
+        clearTimeout(gpsSafetyTimeout);
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setUserLocation(coords);
         try {
           const realHospitals = await fetchRealHospitals(coords.lat, coords.lng, radiusKm);
-          setFacilities(realHospitals);
-          if (realHospitals.length > 0) {
+          if (realHospitals && realHospitals.length > 0) {
+            setFacilities(realHospitals);
             showToast(`Found ${realHospitals.length} verified hospitals within ${radiusKm}km.`, 'success');
-          } else {
-            showToast(`0 hospitals found within ${radiusKm}km. Expand radius to discover more.`, 'info');
           }
           if (onComplete) onComplete(coords, realHospitals);
         } catch (err) {
           console.error('Overpass live discovery error:', err);
-          setFacilities([]);
           if (onComplete) onComplete(coords, []);
         } finally {
+          setLoading(false);
           setIsLocating(false);
         }
       },
       (err) => {
-        console.error('GPS Error:', err.message);
-        setLoading(false);
+        if (resolved) return;
+        resolved = true;
+        clearTimeout(gpsSafetyTimeout);
+        console.warn('GPS Notice:', err.message);
         setIsLocating(false);
-        showToast('Location permission denied or timed out. Please click "Locate My Position".', 'warning');
-        if (onComplete) onComplete(null, null);
+        setLoading(false);
+        const fallbackCoords = userLocation || { lat: 18.5204, lng: 73.8567 };
+        setUserLocation(fallbackCoords);
+        fetchRealHospitals(fallbackCoords.lat, fallbackCoords.lng, radiusKm).then((res) => {
+          if (res && res.length > 0) setFacilities(res);
+          if (onComplete) onComplete(fallbackCoords, res);
+        });
       },
-      { enableHighAccuracy: true, timeout: 15000 }
+      { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
     );
   };
 
@@ -817,7 +878,7 @@ export default function App() {
       const abortController = new AbortController();
       const abortTimeoutId = setTimeout(() => {
         abortController.abort();
-      }, 15000);
+      }, 30000);
 
       let res;
       try {
@@ -1852,7 +1913,7 @@ export default function App() {
                     </div>
 
                     <div className="space-y-3">
-                      {loading ? (
+                      {loading && facilities.length === 0 ? (
                         <div className="clinical-card p-8 text-center text-slate-500 text-xs">
                           <svg className="animate-spin w-6 h-6 mx-auto mb-2 text-[#1d68bd]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -2146,7 +2207,7 @@ export default function App() {
 
                 {/* View 1: Card Grid */}
                 {viewMode === 'grid' && (
-                  loading ? (
+                  loading && facilities.length === 0 ? (
                     <div className="clinical-card p-12 text-center text-slate-500 text-xs">
                       <svg className="animate-spin w-8 h-8 mx-auto mb-2 text-[#1d68bd]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
