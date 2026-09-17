@@ -402,8 +402,11 @@ export default function App() {
       if (res.ok) {
         const data = await res.json();
         if (data && Array.isArray(data.facilities) && data.facilities.length > 0) {
-          setLoading(false);
-          return data.facilities;
+          // If closest facility is actually nearby (<50km), return them!
+          if (data.facilities[0].distance <= 50) {
+            setLoading(false);
+            return data.facilities;
+          }
         }
       }
     } catch (err) {

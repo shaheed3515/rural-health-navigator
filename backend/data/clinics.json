@@ -403,5 +403,114 @@
         "quantity": 90
       }
     ]
+  },
+  {
+    "id": "ggh-kurnool-06",
+    "name": "Government General Hospital & Medical College (GGH Kurnool)",
+    "type": "District Hospital",
+    "district": "Kurnool",
+    "block": "Kurnool Urban",
+    "address": "Hospital Road, Budhawarapet, Kurnool, Andhra Pradesh - 518002",
+    "coordinates": {
+      "lat": 15.8281,
+      "lng": 78.0373
+    },
+    "contact": {
+      "phone": "+91 85182 55108",
+      "emergencyHelpline": "108",
+      "ambulance": "108"
+    },
+    "operatingHours": "24x7 Emergency & Trauma Hub / OPD: 08:00 AM - 02:00 PM",
+    "emergencyBeds": 24,
+    "doctorSpecializations": [
+      "General Medicine",
+      "Emergency & Trauma",
+      "Pediatrics",
+      "Obstetrics & Gynecology",
+      "Orthopedics"
+    ],
+    "doctorsOnDuty": [
+      {
+        "name": "Dr. K. S. Reddy",
+        "specialization": "Emergency & Trauma",
+        "timing": "24x7 Emergency"
+      },
+      {
+        "name": "Dr. P. Lakshmi",
+        "specialization": "Obstetrics & Gynecology",
+        "timing": "08:00 AM - 02:00 PM"
+      }
+    ],
+    "medicineStock": [
+      {
+        "name": "Anti-Snake Venom (ASV)",
+        "category": "Emergency / Anti-Venom",
+        "status": "In Stock",
+        "quantity": 25
+      },
+      {
+        "name": "Paracetamol 500mg",
+        "category": "Analgesic & Antipyretic",
+        "status": "In Stock",
+        "quantity": 2500
+      },
+      {
+        "name": "ORS Sachets",
+        "category": "Hydration / Electrolytes",
+        "status": "In Stock",
+        "quantity": 1200
+      }
+    ]
+  },
+  {
+    "id": "uphc-kurnool-07",
+    "name": "Kurnool Model Urban Primary Health Centre (UPHC)",
+    "type": "PHC",
+    "district": "Kurnool",
+    "block": "Kurnool Urban",
+    "address": "C-Camp Road, Near Rythu Bazar, Kurnool, Andhra Pradesh - 518002",
+    "coordinates": {
+      "lat": 15.8028,
+      "lng": 78.0474
+    },
+    "contact": {
+      "phone": "+91 85182 44102",
+      "emergencyHelpline": "108",
+      "ambulance": "108"
+    },
+    "operatingHours": "08:00 AM - 02:00 PM (Emergency 24x7)",
+    "emergencyBeds": 6,
+    "doctorSpecializations": [
+      "General Medicine",
+      "Pediatrics",
+      "Maternal Care"
+    ],
+    "doctorsOnDuty": [
+      {
+        "name": "Dr. Venkat Rao",
+        "specialization": "General Medicine",
+        "timing": "08:00 AM - 02:00 PM"
+      }
+    ],
+    "medicineStock": [
+      {
+        "name": "Anti-Snake Venom (ASV)",
+        "category": "Emergency / Anti-Venom",
+        "status": "In Stock",
+        "quantity": 10
+      },
+      {
+        "name": "Amoxicillin 500mg",
+        "category": "Antibiotic",
+        "status": "In Stock",
+        "quantity": 400
+      },
+      {
+        "name": "ORS Sachets",
+        "category": "Hydration",
+        "status": "In Stock",
+        "quantity": 600
+      }
+    ]
   }
 ]
