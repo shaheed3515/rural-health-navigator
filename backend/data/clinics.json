@@ -512,5 +512,177 @@
         "quantity": 600
       }
     ]
+  },
+  {
+    "id": "ggh-anantapur-08",
+    "name": "Government General Hospital Anantapur (GGH)",
+    "type": "DH",
+    "district": "Anantapur",
+    "block": "Anantapur Urban",
+    "address": "Court Road, Near Clock Tower, Anantapur, Andhra Pradesh - 515001",
+    "coordinates": {
+      "lat": 14.6811,
+      "lng": 77.6104
+    },
+    "contact": {
+      "phone": "+91 85542 74201",
+      "emergencyHelpline": "108",
+      "ambulance": "108"
+    },
+    "operatingHours": "24x7 Emergency & Trauma Hub / OPD: 08:00 AM - 02:00 PM",
+    "emergencyBeds": 45,
+    "doctorSpecializations": [
+      "General Medicine",
+      "Emergency & Trauma",
+      "Pediatrics",
+      "Gynecology & Obstetrics",
+      "General Surgery"
+    ],
+    "doctorsOnDuty": [
+      {
+        "name": "Dr. K. Srinivasulu",
+        "specialization": "Emergency & Trauma",
+        "timing": "24x7 On-Duty"
+      },
+      {
+        "name": "Dr. M. Lakshmi",
+        "specialization": "Pediatrics",
+        "timing": "08:30 AM - 02:00 PM"
+      }
+    ],
+    "medicineStock": [
+      {
+        "name": "Anti-Snake Venom (ASV)",
+        "category": "Emergency / Anti-Venom",
+        "status": "In Stock",
+        "quantity": 30
+      },
+      {
+        "name": "Paracetamol 500mg",
+        "category": "Analgesic & Antipyretic",
+        "status": "In Stock",
+        "quantity": 3200
+      },
+      {
+        "name": "Amoxicillin 500mg",
+        "category": "Antibiotic",
+        "status": "In Stock",
+        "quantity": 1100
+      },
+      {
+        "name": "ORS Sachets",
+        "category": "Hydration",
+        "status": "In Stock",
+        "quantity": 1500
+      }
+    ]
+  },
+  {
+    "id": "uphc-anantapur-09",
+    "name": "Anantapuram Praja Vaidyasala (Urban PHC)",
+    "type": "PHC",
+    "district": "Anantapur",
+    "block": "Anantapur Urban",
+    "address": "Subash Road, Old Town, Anantapur, Andhra Pradesh - 515001",
+    "coordinates": {
+      "lat": 14.6743,
+      "lng": 77.6073
+    },
+    "contact": {
+      "phone": "+91 85542 22091",
+      "emergencyHelpline": "108",
+      "ambulance": "108"
+    },
+    "operatingHours": "08:00 AM - 02:00 PM (Emergency 24x7)",
+    "emergencyBeds": 8,
+    "doctorSpecializations": [
+      "General Medicine",
+      "Pediatrics",
+      "Maternal Care"
+    ],
+    "doctorsOnDuty": [
+      {
+        "name": "Dr. P. Ramesh",
+        "specialization": "General Medicine",
+        "timing": "08:00 AM - 02:00 PM"
+      }
+    ],
+    "medicineStock": [
+      {
+        "name": "Anti-Snake Venom (ASV)",
+        "category": "Emergency / Anti-Venom",
+        "status": "In Stock",
+        "quantity": 14
+      },
+      {
+        "name": "Paracetamol 500mg",
+        "category": "Analgesic & Antipyretic",
+        "status": "In Stock",
+        "quantity": 950
+      },
+      {
+        "name": "Amoxicillin 500mg",
+        "category": "Antibiotic",
+        "status": "In Stock",
+        "quantity": 380
+      },
+      {
+        "name": "ORS Sachets",
+        "category": "Hydration",
+        "status": "In Stock",
+        "quantity": 800
+      }
+    ]
+  },
+  {
+    "id": "arun-anantapur-10",
+    "name": "Arun Children's & General Hospital Anantapur",
+    "type": "CHC",
+    "district": "Anantapur",
+    "block": "Anantapur Central",
+    "address": "Kamalanagar, Main Road, Anantapur, Andhra Pradesh - 515001",
+    "coordinates": {
+      "lat": 14.6727,
+      "lng": 77.6031
+    },
+    "contact": {
+      "phone": "+91 85542 33140",
+      "emergencyHelpline": "108",
+      "ambulance": "108"
+    },
+    "operatingHours": "24x7 Emergency / OPD: 09:00 AM - 03:00 PM",
+    "emergencyBeds": 18,
+    "doctorSpecializations": [
+      "Pediatrics",
+      "General Medicine",
+      "Emergency & Trauma"
+    ],
+    "doctorsOnDuty": [
+      {
+        "name": "Dr. Arun Kumar",
+        "specialization": "Pediatrics",
+        "timing": "09:00 AM - 03:00 PM"
+      }
+    ],
+    "medicineStock": [
+      {
+        "name": "Anti-Snake Venom (ASV)",
+        "category": "Emergency / Anti-Venom",
+        "status": "In Stock",
+        "quantity": 12
+      },
+      {
+        "name": "Amoxicillin 250mg Suspension",
+        "category": "Pediatric Antibiotic",
+        "status": "In Stock",
+        "quantity": 420
+      },
+      {
+        "name": "ORS Sachets",
+        "category": "Hydration",
+        "status": "In Stock",
+        "quantity": 1100
+      }
+    ]
   }
 ]

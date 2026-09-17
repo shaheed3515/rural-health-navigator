@@ -69,12 +69,25 @@ export async function apiFetch(endpoint, options = {}) {
     options.body = JSON.stringify(options.body);
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
+  // 8-second default timeout to prevent UI freezes if backend is cold-starting
+  let timeoutId = null;
+  let signal = options.signal;
+  if (!signal) {
+    const controller = new AbortController();
+    timeoutId = setTimeout(() => controller.abort(), 8000);
+    signal = controller.signal;
+  }
 
-  return response;
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+      signal
+    });
+    return response;
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
 }
 
 // Authentication API Helpers

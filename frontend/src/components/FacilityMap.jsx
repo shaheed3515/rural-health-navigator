@@ -23,10 +23,11 @@ export default function FacilityMap({
   const [locationError, setLocationError] = useState(null);
 
   const REGION_PRESETS = [
+    { label: 'Anantapur (AP)', lat: 14.6819, lng: 77.6007 },
     { label: 'Kurnool (AP)', lat: 15.7754, lng: 78.0566 },
+    { label: 'Hyderabad (TS)', lat: 17.3850, lng: 78.4867 },
     { label: 'Baramati (MH)', lat: 18.5204, lng: 73.8567 },
-    { label: 'Dindori Tribal', lat: 20.2015, lng: 73.8341 },
-    { label: 'Shirur', lat: 18.8288, lng: 74.3776 }
+    { label: 'Pune (MH)', lat: 18.5204, lng: 73.8567 }
   ];
 
   // 1. Initialize Leaflet Map with robust, high-performance CartoDB Voyager tiles
@@ -125,8 +126,13 @@ export default function FacilityMap({
     }
 
     setLocating(true);
+    const safetyTimer = setTimeout(() => {
+      setLocating(false);
+    }, 5000);
+
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        clearTimeout(safetyTimer);
         const uLat = pos.coords.latitude;
         const uLng = pos.coords.longitude;
         const accuracy = pos.coords.accuracy || 100;
@@ -138,11 +144,12 @@ export default function FacilityMap({
         }
       },
       (err) => {
+        clearTimeout(safetyTimer);
         setLocating(false);
         console.info('GPS Notice:', err.message);
         setLocationError('GPS permission delayed or unavailable. Use the quick presets below or click directly on the map to set location!');
       },
-      { timeout: 10000, enableHighAccuracy: false, maximumAge: 120000 }
+      { timeout: 5000, enableHighAccuracy: true, maximumAge: 60000 }
     );
   };
 
