@@ -151,7 +151,7 @@ export default function App() {
   const [loginLoading, setLoginLoading] = useState(false);
 
   // 3. 100% Dynamic Real-Time Geolocation & Live OSM Discovery
-  const [userLocation, setUserLocation] = useState(null);
+  const [userLocation, setUserLocation] = useState({ lat: 15.7754, lng: 78.0566 });
   const [isLocating, setIsLocating] = useState(false);
   const [facilities, setFacilities] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -454,73 +454,45 @@ export default function App() {
 
   const triggerLiveDiscovery = (radiusKm = searchRadius / 1000, onComplete = null) => {
     setIsLocating(true);
+    const activeCoords = userLocation || { lat: 15.7754, lng: 78.0566 };
+
+    // 1. Immediately fetch facilities for active coordinates so cards and map are never empty
+    fetchRealHospitals(activeCoords.lat, activeCoords.lng, radiusKm).then((res) => {
+      if (res && res.length > 0) setFacilities(res);
+      setLoading(false);
+      if (onComplete) onComplete(activeCoords, res);
+    });
 
     if (!navigator.geolocation) {
-      console.warn('Geolocation not supported by browser; using regional center.');
-      const defaultCoords = { lat: 18.5204, lng: 73.8567 };
-      setUserLocation(defaultCoords);
-      fetchRealHospitals(defaultCoords.lat, defaultCoords.lng, radiusKm).then((res) => {
-        if (res && res.length > 0) setFacilities(res);
-        setLoading(false);
-        setIsLocating(false);
-        if (onComplete) onComplete(defaultCoords, res);
-      });
+      setIsLocating(false);
       return;
     }
 
-    let resolved = false;
-    const gpsSafetyTimeout = setTimeout(() => {
-      if (!resolved) {
-        resolved = true;
-        console.warn('GPS hardware response delayed; activating regional health fallback.');
-        const fallbackCoords = userLocation || { lat: 18.5204, lng: 73.8567 };
-        setUserLocation(fallbackCoords);
-        fetchRealHospitals(fallbackCoords.lat, fallbackCoords.lng, radiusKm).then((res) => {
-          if (res && res.length > 0) setFacilities(res);
-          setLoading(false);
-          setIsLocating(false);
-          if (onComplete) onComplete(fallbackCoords, res);
-        });
-      }
-    }, 5000);
-
+    // 2. Query browser geolocation in background with generous timeout and low accuracy (WiFi/IP)
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        if (resolved) return;
-        resolved = true;
-        clearTimeout(gpsSafetyTimeout);
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setUserLocation(coords);
         try {
           const realHospitals = await fetchRealHospitals(coords.lat, coords.lng, radiusKm);
           if (realHospitals && realHospitals.length > 0) {
             setFacilities(realHospitals);
-            showToast(`Found ${realHospitals.length} verified hospitals within ${radiusKm}km.`, 'success');
+            showToast(`GPS Location acquired (${coords.lat.toFixed(2)}°, ${coords.lng.toFixed(2)}°): Found ${realHospitals.length} nearby healthcare facilities.`, 'success');
           }
           if (onComplete) onComplete(coords, realHospitals);
         } catch (err) {
-          console.error('Overpass live discovery error:', err);
-          if (onComplete) onComplete(coords, []);
+          console.warn('Facility discovery error:', err);
         } finally {
           setLoading(false);
           setIsLocating(false);
         }
       },
       (err) => {
-        if (resolved) return;
-        resolved = true;
-        clearTimeout(gpsSafetyTimeout);
-        console.warn('GPS Notice:', err.message);
+        console.info('GPS Notice (using regional health center):', err.message);
         setIsLocating(false);
         setLoading(false);
-        const fallbackCoords = userLocation || { lat: 18.5204, lng: 73.8567 };
-        setUserLocation(fallbackCoords);
-        fetchRealHospitals(fallbackCoords.lat, fallbackCoords.lng, radiusKm).then((res) => {
-          if (res && res.length > 0) setFacilities(res);
-          if (onComplete) onComplete(fallbackCoords, res);
-        });
       },
-      { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 120000 }
     );
   };
 

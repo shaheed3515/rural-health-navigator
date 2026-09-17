@@ -22,14 +22,21 @@ export default function FacilityMap({
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState(null);
 
-  // 1. Initialize Leaflet Map with standard OSM tiles
+  const REGION_PRESETS = [
+    { label: 'Kurnool (AP)', lat: 15.7754, lng: 78.0566 },
+    { label: 'Baramati (MH)', lat: 18.5204, lng: 73.8567 },
+    { label: 'Dindori Tribal', lat: 20.2015, lng: 73.8341 },
+    { label: 'Shirur', lat: 18.8288, lng: 74.3776 }
+  ];
+
+  // 1. Initialize Leaflet Map with robust, high-performance CartoDB Voyager tiles
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
     if (!mapInstanceRef.current) {
-      const initialLat = userLocation?.lat || 20;
-      const initialLng = userLocation?.lng || 0;
-      const initialZoom = userLocation ? 13 : 2;
+      const initialLat = userLocation?.lat || 15.7754;
+      const initialLng = userLocation?.lng || 78.0566;
+      const initialZoom = userLocation ? 13 : 11;
 
       const map = L.map(mapContainerRef.current, {
         center: [initialLat, initialLng],
@@ -38,10 +45,11 @@ export default function FacilityMap({
         attributionControl: false
       });
 
-      // Standard OpenStreetMap tiles
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
-        maxZoom: 19
+      // High-performance CartoDB Voyager raster tiles (never blocked by CORS / rate limits)
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors, &copy; CARTO',
+        maxZoom: 19,
+        subdomains: 'abcd'
       }).addTo(map);
 
       L.control.attribution({ position: 'bottomright', prefix: 'Swasthya Sangam GIS' }).addTo(map);
@@ -52,10 +60,25 @@ export default function FacilityMap({
       userLayerRef.current = userLayer;
       mapInstanceRef.current = map;
 
+      // Enable Click-To-Locate: clicking anywhere on the map updates user coordinates
+      map.on('click', (e) => {
+        const { lat, lng } = e.latlng;
+        if (onUserLocationChange) {
+          onUserLocationChange({
+            lat: Number(lat.toFixed(4)),
+            lng: Number(lng.toFixed(4)),
+            accuracy: 50
+          });
+        }
+      });
+
       // Force size invalidation after initialization
       setTimeout(() => {
         map.invalidateSize();
-      }, 200);
+      }, 100);
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 400);
     }
 
     return () => {
@@ -66,17 +89,34 @@ export default function FacilityMap({
     };
   }, []);
 
-  // Invalidate map size on view transitions or container mount
+  // Invalidate map size on view transitions, tab switches, and window resize
   useEffect(() => {
+    if (!mapContainerRef.current) return;
+    let ro = null;
+    try {
+      ro = new ResizeObserver(() => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize();
+        }
+      });
+      ro.observe(mapContainerRef.current);
+    } catch (e) {
+      // Fallback timer if ResizeObserver is not supported
+    }
+
     const timer = setTimeout(() => {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.invalidateSize();
       }
     }, 200);
-    return () => clearTimeout(timer);
+
+    return () => {
+      if (ro) ro.disconnect();
+      clearTimeout(timer);
+    };
   }, []);
 
-  // Request browser geolocation
+  // Request browser geolocation with low-accuracy fast WiFi/IP fallback
   const handleGetLocation = () => {
     setLocationError(null);
     if (!navigator.geolocation) {
@@ -92,15 +132,17 @@ export default function FacilityMap({
         const accuracy = pos.coords.accuracy || 100;
         const loc = { lat: uLat, lng: uLng, accuracy };
         setLocating(false);
+        setLocationError(null);
         if (onUserLocationChange) {
           onUserLocationChange(loc);
         }
       },
       (err) => {
         setLocating(false);
-        setLocationError('GPS access was blocked. Click "Locate My Position" or enable browser location permission.');
+        console.info('GPS Notice:', err.message);
+        setLocationError('GPS permission delayed or unavailable. Use the quick presets below or click directly on the map to set location!');
       },
-      { timeout: 10000, enableHighAccuracy: true }
+      { timeout: 10000, enableHighAccuracy: false, maximumAge: 120000 }
     );
   };
 
@@ -319,7 +361,7 @@ export default function FacilityMap({
           type="button"
           onClick={handleGetLocation}
           disabled={locating}
-          className="px-3.5 py-2 bg-white/95 hover:bg-white text-slate-800 text-xs font-bold rounded-xl shadow-sm border border-[#bfdbfe] backdrop-blur-md flex items-center gap-2 transition cursor-pointer disabled:opacity-60"
+          className="px-3 py-1.5 bg-white/95 hover:bg-white text-slate-800 text-xs font-bold rounded-xl shadow-sm border border-[#bfdbfe] backdrop-blur-md flex items-center gap-1.5 transition cursor-pointer disabled:opacity-60"
         >
           {locating ? (
             <svg className="animate-spin w-3.5 h-3.5 text-[#1d68bd]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -327,17 +369,43 @@ export default function FacilityMap({
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
             </svg>
           ) : (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1d68bd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1d68bd" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
           )}
-          <span>{locating ? 'Detecting...' : <>Locate<span className="hidden sm:inline"> My Position</span></>}</span>
+          <span>{locating ? 'Detecting GPS...' : 'Locate Me'}</span>
         </button>
 
+        {/* Quick Regional Presets for instant navigation without GPS delay */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {REGION_PRESETS.map((preset) => {
+            const isSelected = userLocation && Math.abs(userLocation.lat - preset.lat) < 0.15 && Math.abs(userLocation.lng - preset.lng) < 0.15;
+            return (
+              <button
+                key={preset.label}
+                type="button"
+                onClick={() => {
+                  setLocationError(null);
+                  if (onUserLocationChange) {
+                    onUserLocationChange({ lat: preset.lat, lng: preset.lng, accuracy: 100 });
+                  }
+                }}
+                className={`px-2.5 py-1 text-[11px] font-bold rounded-xl transition cursor-pointer border shadow-2xs backdrop-blur-md ${
+                  isSelected
+                    ? 'bg-[#1d68bd] text-white border-[#1d68bd] shadow-xs'
+                    : 'bg-white/95 hover:bg-white text-slate-700 border-[#bfdbfe] hover:border-[#1d68bd]'
+                }`}
+              >
+                {preset.label}
+              </button>
+            );
+          })}
+        </div>
+
         {userLocation && (
-          <span className="px-2.5 py-1.5 bg-[#1d68bd] text-white font-bold text-[10px] sm:text-[11px] rounded-xl shadow-xs backdrop-blur-md flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-sky-300"></span> GPS Active ({userLocation.lat.toFixed(2)}°, {userLocation.lng.toFixed(2)}°)
+          <span className="px-2.5 py-1 bg-[#1d68bd] text-white font-bold text-[10px] rounded-xl shadow-xs backdrop-blur-md flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-sky-300 animate-pulse"></span> {userLocation.lat.toFixed(2)}°, {userLocation.lng.toFixed(2)}°
           </span>
         )}
       </div>
@@ -362,7 +430,7 @@ export default function FacilityMap({
       </div>
 
       {locationError && (
-        <div className="absolute top-16 left-3 z-20 bg-amber-50 border border-amber-200 text-amber-800 text-xs px-3 py-1.5 rounded-xl shadow-sm flex items-center gap-1.5">
+        <div className="absolute top-14 left-3 z-20 bg-amber-50 border border-amber-200 text-amber-900 text-xs px-3 py-1.5 rounded-xl shadow-sm flex items-center gap-1.5 max-w-[90%]">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600 shrink-0">
             <circle cx="12" cy="12" r="10" />
             <line x1="12" y1="8" x2="12" y2="12" />
@@ -371,6 +439,15 @@ export default function FacilityMap({
           <span>{locationError}</span>
         </div>
       )}
+
+      {/* Interactive Helper Badge */}
+      <div className="hidden md:flex absolute bottom-3 left-3 z-20 bg-slate-900/80 text-white backdrop-blur-sm px-3 py-1 rounded-lg text-[10px] font-medium items-center gap-1.5 pointer-events-none shadow-sm">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 8v8M8 12h8" />
+        </svg>
+        <span>Click anywhere on the map to set your location & search nearby healthcare</span>
+      </div>
 
       {/* Leaflet Map Canvas with Responsive Height */}
       <div
