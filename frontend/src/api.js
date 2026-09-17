@@ -144,105 +144,47 @@ export function getDistanceKm(lat1, lon1, lat2, lon2) {
 }
 
 /**
- * Pure dynamic OpenStreetMap Overpass API client for 100% REAL healthcare facility discovery
- * Features multi-endpoint failover and strict filtering of real entities without ANY mock/synthetic fallbacks
+ * Real-Time Healthcare Facility Discovery
+ * Queries backend proxy `/api/facilities/nearby` which performs server-to-server
+ * Overpass GIS queries without browser CORS restrictions, with automatic fallback
+ * to verified database facilities.
  */
 export async function fetchRealHospitals(lat, lng, radiusKm = 20) {
-  const radiusMeters = radiusKm * 1000;
-  const overpassQuery = `
-    [out:json][timeout:25];
-    (
-      node["amenity"~"hospital|clinic|doctors"](around:${radiusMeters},${lat},${lng});
-      way["amenity"~"hospital|clinic|doctors"](around:${radiusMeters},${lat},${lng});
-      node["healthcare"~"hospital|clinic"](around:${radiusMeters},${lat},${lng});
-    );
-    out center 35;
-  `;
-
-  const endpoints = [
-    'https://overpass-api.de/api/interpreter',
-    'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
-    'https://overpass.kumi.systems/api/interpreter'
-  ];
-
-  let data = null;
-  for (const ep of endpoints) {
-    try {
-      const res = await fetch(`${ep}?data=${encodeURIComponent(overpassQuery)}`);
-      if (res.ok) {
-        data = await res.json();
-        if (data?.elements?.length > 0) break;
+  try {
+    const res = await apiFetch(`/api/facilities/nearby?lat=${lat}&lng=${lng}&radiusKm=${radiusKm}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.facilities && data.facilities.length > 0) {
+        return data.facilities;
       }
-    } catch (e) {
-      console.warn(`Overpass endpoint ${ep} failed, trying next fallback...`);
     }
+  } catch (err) {
+    console.warn('[Facilities Discovery] Backend proxy query error, falling back:', err);
   }
 
-  if (!data || !data.elements) {
-    return [];
+  // Fallback to static facilities endpoint if nearby proxy had no response
+  try {
+    const fallbackRes = await apiFetch('/api/facilities');
+    if (fallbackRes.ok) {
+      const fallbackData = await fallbackRes.json();
+      const list = Array.isArray(fallbackData) ? fallbackData : (fallbackData?.facilities || []);
+      return list.map((f) => {
+        const fLat = f.coordinates?.lat || lat;
+        const fLng = f.coordinates?.lng || lng;
+        const d = calculateDistance(lat, lng, fLat, fLng);
+        return {
+          ...f,
+          distance: d,
+          distanceKm: d,
+          lat: fLat,
+          lng: fLng
+        };
+      }).sort((a, b) => a.distance - b.distance);
+    }
+  } catch (e) {
+    console.warn('[Facilities Discovery] Fallback failed:', e);
   }
-
-  return data.elements
-    .filter((el) => el.tags && (el.tags.name || el.tags['name:en']))
-    .map((el, idx) => {
-      const itemLat = el.lat || el.center?.lat;
-      const itemLng = el.lon || el.center?.lon;
-      const name = el.tags.name || el.tags['name:en'];
-
-      // Extract address dynamically without hardcoding city/state
-      const street = el.tags['addr:street'] || '';
-      const sub = el.tags['addr:suburb'] || el.tags['addr:district'] || el.tags['addr:neighbourhood'] || '';
-      const city = el.tags['addr:city'] || el.tags['addr:town'] || el.tags['addr:village'] || '';
-      const fullAddress = [street, sub, city].filter(Boolean).join(', ') || el.tags['operator'] || 'Healthcare Facility';
-
-      // Haversine distance calculation
-      const dLat = (itemLat - lat) * (Math.PI / 180);
-      const dLng = (itemLng - lng) * (Math.PI / 180);
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat * (Math.PI / 180)) * Math.cos(itemLat * (Math.PI / 180)) *
-        Math.sin(dLng / 2) * Math.sin(dLng / 2);
-      const dist = (6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))).toFixed(1);
-
-      const isClinic = el.tags.amenity === 'clinic' || el.tags.amenity === 'doctors';
-
-      return {
-        _id: `osm-${el.id || idx}`,
-        id: `osm-${el.id || idx}`,
-        name: name,
-        type: isClinic ? 'PRIMARY HEALTH CLINIC' : 'GENERAL HOSPITAL',
-        categoryLabel: isClinic ? 'Primary Health Clinic' : 'General Hospital',
-        address: fullAddress,
-        district: city || 'Nearby Healthcare',
-        distance: parseFloat(dist),
-        distanceKm: parseFloat(dist),
-        lat: itemLat,
-        lng: itemLng,
-        coordinates: { lat: itemLat, lng: itemLng },
-        beds: el.tags['beds'] ? parseInt(el.tags['beds'], 10) : (Math.floor(Math.random() * 15) + 3),
-        emergencyBeds: el.tags['beds'] ? parseInt(el.tags['beds'], 10) : (Math.floor(Math.random() * 15) + 3),
-        phone: el.tags.phone || el.tags['contact:phone'] || 'Dial 108 for Emergency',
-        contact: {
-          phone: el.tags.phone || el.tags['contact:phone'] || 'Dial 108 for Emergency',
-          emergencyHelpline: '108',
-          ambulance: '108'
-        },
-        specialties: el.tags.emergency === 'yes'
-          ? ['Emergency & Trauma', 'General Medicine', 'Pediatrics']
-          : ['General Medicine', 'OPD Consultations'],
-        doctorSpecializations: el.tags.emergency === 'yes'
-          ? ['Emergency & Trauma', 'General Medicine', 'Pediatrics']
-          : ['General Medicine', 'OPD Consultations'],
-        operatingHours: el.tags.opening_hours || '08:30 AM - 02:00 PM (Emergency 24x7)',
-        directionsUrl: `https://www.google.com/maps/dir/?api=1&destination=${itemLat},${itemLng}`,
-        medicineStock: [
-          { name: 'Anti-Snake Venom (ASV)', category: 'Emergency', status: 'In Stock', quantity: 12 },
-          { name: 'Paracetamol & Analgesics', category: 'General', status: 'In Stock', quantity: 850 },
-          { name: 'ORS Hydration Sachets', category: 'Hydration', status: 'In Stock', quantity: 600 }
-        ]
-      };
-    })
-    .sort((a, b) => a.distance - b.distance);
+  return [];
 }
 
 // Backwards compatibility export
