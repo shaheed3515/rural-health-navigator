@@ -19,25 +19,52 @@ export default function SosBeaconModal({
     {
       id: 'stretcher',
       label: 'Lifting / Stretcher Support',
-      icon: '🚶',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-600">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      ),
       desc: 'Patient has fallen, collapsed, or cannot stand/walk alone.'
     },
     {
       id: 'bleeding',
       label: 'Accident / Severe Bleeding',
-      icon: '🩸',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-rose-600">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      ),
       desc: 'Road crash or deep laceration needing immediate pressure bandage.'
     },
     {
       id: 'transit',
       label: 'Emergency Transit to Clinic',
-      icon: '🚗',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
+          <rect x="1" y="3" width="15" height="13"/>
+          <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+          <circle cx="5.5" cy="18.5" r="2.5"/>
+          <circle cx="18.5" cy="18.5" r="2.5"/>
+        </svg>
+      ),
       desc: 'Needs an immediate auto, bike, or car to reach the nearest hospital.'
     },
     {
       id: 'equipment',
       label: 'Urgent Medical Equipment',
-      icon: '📦',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+          <line x1="12" y1="11" x2="12" y2="17"/>
+          <line x1="9" y1="14" x2="15" y2="14"/>
+        </svg>
+      ),
       desc: 'Requires a nearby wheelchair, oxygen cylinder, or AED.'
     }
   ];
@@ -88,8 +115,11 @@ export default function SosBeaconModal({
         {/* Header */}
         <div className="p-4 sm:p-5 bg-gradient-to-r from-rose-600 to-red-700 text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-white/20 flex items-center justify-center text-white text-lg font-black animate-pulse">
-              🚨
+            <div className="w-9 h-9 rounded-2xl bg-white/20 flex items-center justify-center text-white">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse">
+                <circle cx="12" cy="12" r="2"/>
+                <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/>
+              </svg>
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -124,8 +154,14 @@ export default function SosBeaconModal({
               <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
                 <span className="absolute inset-0 rounded-full bg-rose-500/20 animate-ping"></span>
                 <span className="absolute inset-2 rounded-full bg-rose-500/30 animate-pulse"></span>
-                <div className="w-16 h-16 rounded-full bg-rose-600 text-white flex items-center justify-center text-2xl shadow-lg z-10">
-                  📡
+                <div className="w-16 h-16 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-lg z-10">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/>
+                    <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/>
+                    <circle cx="12" cy="12" r="2"/>
+                    <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/>
+                    <path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/>
+                  </svg>
                 </div>
               </div>
 
@@ -258,7 +294,9 @@ export default function SosBeaconModal({
                   </>
                 ) : (
                   <>
-                    <span className="text-base">🚨</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                    </svg>
                     <span>BROADCAST GOLDEN HOUR SOS BEACON</span>
                   </>
                 )}

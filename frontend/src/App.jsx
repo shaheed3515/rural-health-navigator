@@ -950,7 +950,7 @@ export default function App() {
                 {
                   id: Date.now() + 2,
                   sender: 'bot',
-                  text: `📍 **Live GPS Detected:** (${coords.lat.toFixed(4)}°, ${coords.lng.toFixed(4)}°)\nI have synchronized your location and retrieved **${count} verified healthcare facilities** nearby on the live map.`,
+                  text: `**Live GPS Coordinates Synchronized:** (${coords.lat.toFixed(4)}°, ${coords.lng.toFixed(4)}°)\nI have synchronized your location and retrieved **${count} verified healthcare facilities** nearby on the live map.`,
                   source: 'system-gps',
                   time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                 }
@@ -1299,7 +1299,11 @@ export default function App() {
         <div className="flex items-center gap-2 shrink-0">
           {/* Language Dropdown */}
           <div className="relative flex items-center gap-1 px-2 py-0.5 rounded border border-slate-200 bg-white text-[11px] font-medium text-slate-700 shadow-2xs">
-            <span className="text-slate-400">🌐</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10z"/>
+            </svg>
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
@@ -1494,10 +1498,13 @@ export default function App() {
             {/* Golden Hour Bystander SOS Trigger Button */}
             <button
               onClick={() => setShowSosModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-black transition shadow-sm bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white border-rose-700 cursor-pointer animate-pulse"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-black transition shadow-sm bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white border-rose-700 cursor-pointer"
               title="Broadcast Emergency Golden Hour SOS Beacon"
             >
-              <span>🚨</span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse">
+                <circle cx="12" cy="12" r="2"/>
+                <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/>
+              </svg>
               <span>SOS</span>
             </button>
 
@@ -3338,8 +3345,10 @@ export default function App() {
                                 >
                                   {currentlySpeakingId === msg.id ? (
                                     <>
-                                      <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
-                                      <span>⏹ Stop Audio</span>
+                                      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                                        <rect x="5" y="5" width="14" height="14" rx="2" />
+                                      </svg>
+                                      <span>Stop Audio</span>
                                     </>
                                   ) : (
                                     <>
@@ -3348,7 +3357,7 @@ export default function App() {
                                         <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
                                         <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
                                       </svg>
-                                      <span>🔊 Listen Response</span>
+                                      <span>Listen Response</span>
                                     </>
                                   )}
                                 </button>
@@ -3420,7 +3429,7 @@ export default function App() {
                             <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
                             <circle cx="12" cy="13" r="3"/>
                           </svg>
-                          <span>📸 Snap Camera</span>
+                          <span>Take Photo</span>
                         </button>
                         <input
                           type="file"
@@ -3857,7 +3866,23 @@ export default function App() {
                               : 'bg-sky-50 text-[#1d68bd] hover:bg-sky-100 border border-sky-200'
                           }`}
                         >
-                          {currentlySpeakingId === msg.id ? '⏹ Stop' : '🔊 Listen'}
+                          {currentlySpeakingId === msg.id ? (
+                            <>
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                                <rect x="5" y="5" width="14" height="14" rx="2" />
+                              </svg>
+                              <span>Stop</span>
+                            </>
+                          ) : (
+                            <>
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                                <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                              </svg>
+                              <span>Listen</span>
+                            </>
+                          )}
                         </button>
                         <span className="text-[9px] text-slate-400">Spoken in {language}</span>
                       </div>
@@ -4697,7 +4722,13 @@ export default function App() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       <div className="p-3 rounded-xl border border-slate-200 bg-white shadow-xs">
                         <div className="flex items-center gap-2 text-blue-700 font-bold text-xs mb-1">
-                          <span className="w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center text-xs">📊</span>
+                          <span className="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                              <line x1="18" y1="20" x2="18" y2="10"/>
+                              <line x1="12" y1="20" x2="12" y2="4"/>
+                              <line x1="6" y1="20" x2="6" y2="14"/>
+                            </svg>
+                          </span>
                           Real-Time Telemetry
                         </div>
                         <p className="text-[11px] text-slate-600 leading-normal">
@@ -4707,7 +4738,13 @@ export default function App() {
 
                       <div className="p-3 rounded-xl border border-slate-200 bg-white shadow-xs">
                         <div className="flex items-center gap-2 text-emerald-700 font-bold text-xs mb-1">
-                          <span className="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center text-xs">📦</span>
+                          <span className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                              <line x1="12" y1="22.08" x2="12" y2="12"/>
+                            </svg>
+                          </span>
                           Supply Chain Transparency
                         </div>
                         <p className="text-[11px] text-slate-600 leading-normal">
@@ -4717,7 +4754,20 @@ export default function App() {
 
                       <div className="p-3 rounded-xl border border-slate-200 bg-white shadow-xs">
                         <div className="flex items-center gap-2 text-purple-700 font-bold text-xs mb-1">
-                          <span className="w-6 h-6 rounded-lg bg-purple-100 flex items-center justify-center text-xs">🤖</span>
+                          <span className="w-6 h-6 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="4" y="4" width="16" height="16" rx="2"/>
+                              <rect x="9" y="9" width="6" height="6"/>
+                              <line x1="9" y1="1" x2="9" y2="4"/>
+                              <line x1="15" y1="1" x2="15" y2="4"/>
+                              <line x1="9" y1="20" x2="9" y2="23"/>
+                              <line x1="15" y1="20" x2="15" y2="23"/>
+                              <line x1="20" y1="9" x2="23" y2="9"/>
+                              <line x1="20" y1="14" x2="23" y2="14"/>
+                              <line x1="1" y1="9" x2="4" y2="9"/>
+                              <line x1="1" y1="14" x2="4" y2="14"/>
+                            </svg>
+                          </span>
                           Grounded Clinical AI
                         </div>
                         <p className="text-[11px] text-slate-600 leading-normal">
@@ -4727,7 +4777,13 @@ export default function App() {
 
                       <div className="p-3 rounded-xl border border-slate-200 bg-white shadow-xs">
                         <div className="flex items-center gap-2 text-amber-700 font-bold text-xs mb-1">
-                          <span className="w-6 h-6 rounded-lg bg-amber-100 flex items-center justify-center text-xs">🌐</span>
+                          <span className="w-6 h-6 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="10"/>
+                              <line x1="2" y1="12" x2="22" y2="12"/>
+                              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                            </svg>
+                          </span>
                           Inclusive Design
                         </div>
                         <p className="text-[11px] text-slate-600 leading-normal">

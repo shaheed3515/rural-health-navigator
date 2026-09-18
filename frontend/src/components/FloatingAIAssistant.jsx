@@ -278,13 +278,29 @@ export default function FloatingAIAssistant({
                           <button
                             type="button"
                             onClick={() => handleSpeakText(msg.id, msg.text)}
-                            className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition flex items-center gap-1 cursor-pointer ${
+                            className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition flex items-center gap-1 cursor-pointer ${
                               currentlySpeakingId === msg.id
                                 ? 'bg-rose-500 text-white'
                                 : 'bg-sky-50 text-[#1d68bd] hover:bg-sky-100 border border-sky-200'
                             }`}
                           >
-                            {currentlySpeakingId === msg.id ? '⏹ Stop' : '🔊 Listen'}
+                            {currentlySpeakingId === msg.id ? (
+                              <>
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                                  <rect x="5" y="5" width="14" height="14" rx="2" />
+                                </svg>
+                                <span>Stop</span>
+                              </>
+                            ) : (
+                              <>
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                                </svg>
+                                <span>Listen</span>
+                              </>
+                            )}
                           </button>
                           <span className="text-[9px] text-slate-400">Spoken in {language}</span>
                         </div>

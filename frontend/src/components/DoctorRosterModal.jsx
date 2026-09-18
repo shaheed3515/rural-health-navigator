@@ -155,9 +155,9 @@ export default function DoctorRosterModal({
                       onChange={(e) => handleStatusChange(doc.id, e.target.value)}
                       className="text-xs font-bold bg-slate-100 border border-slate-300 rounded-lg p-1.5 text-slate-700 cursor-pointer"
                     >
-                      <option value="ON_DUTY">🟢 On Duty</option>
-                      <option value="IN_OT">🟡 In OT</option>
-                      <option value="OFF_DUTY">🔴 Off Duty</option>
+                      <option value="ON_DUTY">Active - On Duty</option>
+                      <option value="IN_OT">Active - In OT / Emergency</option>
+                      <option value="OFF_DUTY">Off Duty / Off Shift</option>
                     </select>
                   ) : (
                     <button
