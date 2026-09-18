@@ -4891,7 +4891,7 @@ export default function App() {
         isOpen={showRosterModal}
         onClose={() => setShowRosterModal(false)}
         facility={rosterFacility}
-        isAdmin={userRole === 'cmo_admin'}
+        isAdmin={currentUser?.role === 'admin'}
         onBookToken={(fac, doc) => {
           setBookingClinic(fac);
           setShowBookingModal(true);
@@ -4907,7 +4907,7 @@ export default function App() {
         isOpen={showSosModal}
         onClose={() => setShowSosModal(false)}
         userLocation={userLocation}
-        patientName={userProfile?.fullName || 'Citizen in Need'}
+        patientName={currentUser?.fullName || currentUser?.name || 'Citizen in Need'}
       />
     </div>
   );
