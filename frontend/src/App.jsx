@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import FacilityMap from './components/FacilityMap';
+import LiveCameraModal from './components/LiveCameraModal';
+import DoctorRosterModal from './components/DoctorRosterModal';
+import SosBeaconModal from './components/SosBeaconModal';
 import { getTranslation } from './translations';
 import './App.css';
 import {
@@ -194,6 +197,13 @@ export default function App() {
 
   const discoverySeqRef = useRef(0);
   const isLocatingSafetyTimerRef = useRef(null);
+
+  // Feature States: Live Camera, Doctor Roster & Golden Hour SOS
+  const [showLiveCamera, setShowLiveCamera] = useState(false);
+  const [showRosterModal, setShowRosterModal] = useState(false);
+  const [rosterFacility, setRosterFacility] = useState(null);
+  const [showSosModal, setShowSosModal] = useState(false);
+  const [currentlySpeakingId, setCurrentlySpeakingId] = useState(null);
 
   // Subtle Light-Blue Toast (auto-dismisses in 3 seconds)
   const [subtleToast, setSubtleToast] = useState(null);
@@ -871,7 +881,14 @@ export default function App() {
             name: f.name || f.tags?.name || 'Local Health Centre',
             distance: f.distance ? `${f.distance} km` : (f.distanceKm ? `${f.distanceKm} km` : 'nearby'),
             type: f.type || f.tags?.amenity || 'Hospital/PHC',
-            beds: f.beds || f.emergencyBeds || 'Available'
+            beds: f.beds || f.emergencyBeds || 'Available',
+            doctorsOnDuty: (f.doctorRoster || f.doctorsOnDuty || []).map(d => ({
+              name: d.name,
+              specialization: d.specialization,
+              dutyStatus: d.dutyStatus || 'ON_DUTY',
+              roomNo: d.roomNo || 'OPD Room',
+              tokensAhead: d.tokensCount || 0
+            }))
           }))
         : [];
 
@@ -1048,6 +1065,39 @@ export default function App() {
       setIsRecording(false);
       showToast('Transcribed: "Where can I get emergency antivenom right now?"', 'success');
     }, 2000);
+  };
+
+  // Spoken Voice Output Handler (Web Speech Synthesis with Indian Regional Accents)
+  const handleSpeakText = (msgId, text) => {
+    if (!('speechSynthesis' in window)) {
+      showToast('Text-to-speech audio is not supported in this browser.', 'error');
+      return;
+    }
+
+    if (currentlySpeakingId === msgId) {
+      window.speechSynthesis.cancel();
+      setCurrentlySpeakingId(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    const cleanText = (text || '')
+      .replace(/[*_#`[\]]/g, '')
+      .replace(/https?:\/\/\S+/g, '')
+      .trim();
+
+    if (!cleanText) return;
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = language === 'Hindi' ? 'hi-IN' : language === 'Telugu' ? 'te-IN' : language === 'Marathi' ? 'mr-IN' : 'en-IN';
+    utterance.rate = 0.95;
+
+    utterance.onend = () => setCurrentlySpeakingId(null);
+    utterance.onerror = () => setCurrentlySpeakingId(null);
+
+    setCurrentlySpeakingId(msgId);
+    window.speechSynthesis.speak(utterance);
   };
 
   // Horizontal Resize Logic for Right Drawer (320px - 720px)
@@ -1439,6 +1489,16 @@ export default function App() {
               <span className="text-[11px]">
                 {isLocating ? 'Locating...' : (userLocation ? `${userLocation.lat.toFixed(2)}°, ${userLocation.lng.toFixed(2)}°` : 'Locate')}
               </span>
+            </button>
+
+            {/* Golden Hour Bystander SOS Trigger Button */}
+            <button
+              onClick={() => setShowSosModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-black transition shadow-sm bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white border-rose-700 cursor-pointer animate-pulse"
+              title="Broadcast Emergency Golden Hour SOS Beacon"
+            >
+              <span>🚨</span>
+              <span>SOS</span>
             </button>
 
             {/* Notifications Bell */}
@@ -2356,6 +2416,17 @@ export default function App() {
                                 {t('directions')}
                               </a>
                               <button
+                                onClick={() => {
+                                  setRosterFacility(clinic);
+                                  setShowRosterModal(true);
+                                }}
+                                className="px-2 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+                                title="View Live On-Duty Doctors & Queue"
+                              >
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span>Doctors Roster</span>
+                              </button>
+                              <button
                                 onClick={() => askAIAboutClinic(clinic)}
                                 className="px-2 py-1 bg-[#f0f7ff] hover:bg-[#e0edfd] text-[#1d68bd] border border-[#bfdbfe] rounded-lg text-[11px] font-semibold flex items-center gap-1"
                               >
@@ -3252,6 +3323,38 @@ export default function App() {
                               />
                             )}
                             <p className="whitespace-pre-wrap leading-relaxed text-xs">{msg.text}</p>
+                            
+                            {msg.sender !== 'user' && (
+                              <div className="pt-2 mt-2 border-t border-slate-100 flex items-center justify-between">
+                                <button
+                                  type="button"
+                                  onClick={() => handleSpeakText(msg.id, msg.text)}
+                                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                                    currentlySpeakingId === msg.id
+                                      ? 'bg-rose-500 text-white shadow-xs'
+                                      : 'bg-sky-50 text-[#1d68bd] hover:bg-sky-100 border border-sky-200'
+                                  }`}
+                                  title={currentlySpeakingId === msg.id ? 'Stop Speaking' : 'Read Aloud in ' + language}
+                                >
+                                  {currentlySpeakingId === msg.id ? (
+                                    <>
+                                      <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
+                                      <span>⏹ Stop Audio</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                                      </svg>
+                                      <span>🔊 Listen Response</span>
+                                    </>
+                                  )}
+                                </button>
+                                <span className="text-[10px] text-slate-400 font-medium">Spoken in {language}</span>
+                              </div>
+                            )}
                           </div>
                           <span className="text-[10px] text-slate-400 mt-1 px-1">{msg.time}</span>
                         </div>
@@ -3308,6 +3411,17 @@ export default function App() {
                             Remove
                           </button>
                         )}
+                        <button
+                          type="button"
+                          onClick={() => setShowLiveCamera(true)}
+                          className="px-3 py-1.5 bg-[#1d68bd] text-white hover:bg-[#15529a] rounded-lg text-xs font-bold shadow-2xs cursor-pointer transition flex items-center gap-1.5"
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                            <circle cx="12" cy="13" r="3"/>
+                          </svg>
+                          <span>📸 Snap Camera</span>
+                        </button>
                         <input
                           type="file"
                           accept="image/*"
@@ -3732,6 +3846,22 @@ export default function App() {
                       />
                     )}
                     <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                    {msg.sender !== 'user' && (
+                      <div className="pt-1.5 mt-1 border-t border-slate-100 flex items-center justify-between">
+                        <button
+                          type="button"
+                          onClick={() => handleSpeakText(msg.id, msg.text)}
+                          className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition flex items-center gap-1 cursor-pointer ${
+                            currentlySpeakingId === msg.id
+                              ? 'bg-rose-500 text-white'
+                              : 'bg-sky-50 text-[#1d68bd] hover:bg-sky-100 border border-sky-200'
+                          }`}
+                        >
+                          {currentlySpeakingId === msg.id ? '⏹ Stop' : '🔊 Listen'}
+                        </button>
+                        <span className="text-[9px] text-slate-400">Spoken in {language}</span>
+                      </div>
+                    )}
                   </div>
                   <span className="text-[9px] text-slate-400 mt-0.5 px-1">{msg.time}</span>
                 </div>
@@ -3779,6 +3909,35 @@ export default function App() {
                 }}
                 className="flex items-center gap-1.5"
               >
+                <button
+                  type="button"
+                  onClick={() => setShowLiveCamera(true)}
+                  className="p-2 text-slate-500 hover:text-[#1d68bd] hover:bg-[#e0edfd] rounded-xl cursor-pointer transition flex items-center justify-center"
+                  title="Snap Live Photo with Camera"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                    <circle cx="12" cy="13" r="3"/>
+                  </svg>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleToggleVoice}
+                  className={`p-2 rounded-xl transition cursor-pointer flex items-center justify-center ${
+                    isRecording
+                      ? 'bg-rose-500 text-white shadow-xs animate-pulse'
+                      : 'text-slate-500 hover:text-[#1d68bd] hover:bg-[#e0edfd]'
+                  }`}
+                  title={isRecording ? 'Listening...' : 'Voice Dictate'}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                    <line x1="12" y1="19" x2="12" y2="22" />
+                  </svg>
+                </button>
+
                 <input
                   type="file"
                   accept="image/*"
@@ -4715,6 +4874,41 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Live In-App Camera Viewfinder */}
+      <LiveCameraModal
+        isOpen={showLiveCamera}
+        onClose={() => setShowLiveCamera(false)}
+        onCapturePhoto={(imgData) => {
+          setChatImage(imgData);
+          setChatImageName('Live_Camera_Capture.jpg');
+          showToast('Live prescription/injury photo captured and attached to AI Triage.', 'success');
+        }}
+      />
+
+      {/* Live Doctor Duty Roster Modal */}
+      <DoctorRosterModal
+        isOpen={showRosterModal}
+        onClose={() => setShowRosterModal(false)}
+        facility={rosterFacility}
+        isAdmin={userRole === 'cmo_admin'}
+        onBookToken={(fac, doc) => {
+          setBookingClinic(fac);
+          setShowBookingModal(true);
+        }}
+        onRosterUpdated={(facId, newRoster) => {
+          setFacilities((prev) => prev.map(f => f.id === facId ? { ...f, doctorRoster: newRoster, doctorsOnDuty: newRoster } : f));
+          showToast('Doctor shift status updated live in hospital roster.', 'success');
+        }}
+      />
+
+      {/* Golden Hour Bystander SOS Beacon Modal */}
+      <SosBeaconModal
+        isOpen={showSosModal}
+        onClose={() => setShowSosModal(false)}
+        userLocation={userLocation}
+        patientName={userProfile?.fullName || 'Citizen in Need'}
+      />
     </div>
   );
 }

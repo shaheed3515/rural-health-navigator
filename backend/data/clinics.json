@@ -24,19 +24,55 @@
     ],
     "doctorsOnDuty": [
       {
+        "id": "doc-phc-baramati-01-1",
         "name": "Dr. Rajeshwar Sharma",
+        "qualification": "MBBS, MD (General Medicine)",
         "specialization": "General Medicine",
-        "timing": "08:00 AM - 02:00 PM"
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 101",
+        "tokensCount": 14,
+        "estimatedWaitMins": 20,
+        "timing": "08:00 AM - 02:00 PM",
+        "experienceYears": 8,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       },
       {
+        "id": "doc-phc-baramati-01-2",
         "name": "Dr. Suman Maurya",
+        "qualification": "MBBS, MD (Pediatrics)",
         "specialization": "Pediatrics",
-        "timing": "09:00 AM - 01:00 PM"
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 102",
+        "tokensCount": 8,
+        "estimatedWaitMins": 35,
+        "timing": "09:00 AM - 01:00 PM",
+        "experienceYears": 11,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       },
       {
+        "id": "doc-phc-baramati-01-3",
         "name": "Vaidya Alok Tripathy",
+        "qualification": "BAMS, Fellowship in Community Health",
         "specialization": "Ayush & Community Health",
-        "timing": "10:00 AM - 02:00 PM"
+        "dutyStatus": "OFF_DUTY",
+        "roomNo": "OPD Room 103",
+        "tokensCount": 0,
+        "estimatedWaitMins": 0,
+        "timing": "10:00 AM - 02:00 PM",
+        "experienceYears": 14,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       }
     ],
     "medicineStock": [
@@ -82,6 +118,59 @@
         "status": "Out of Stock",
         "quantity": 0
       }
+    ],
+    "doctorRoster": [
+      {
+        "id": "doc-phc-baramati-01-1",
+        "name": "Dr. Rajeshwar Sharma",
+        "qualification": "MBBS, MD (General Medicine)",
+        "specialization": "General Medicine",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 101",
+        "tokensCount": 14,
+        "estimatedWaitMins": 20,
+        "timing": "08:00 AM - 02:00 PM",
+        "experienceYears": 8,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
+      },
+      {
+        "id": "doc-phc-baramati-01-2",
+        "name": "Dr. Suman Maurya",
+        "qualification": "MBBS, MD (Pediatrics)",
+        "specialization": "Pediatrics",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 102",
+        "tokensCount": 8,
+        "estimatedWaitMins": 35,
+        "timing": "09:00 AM - 01:00 PM",
+        "experienceYears": 11,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
+      },
+      {
+        "id": "doc-phc-baramati-01-3",
+        "name": "Vaidya Alok Tripathy",
+        "qualification": "BAMS, Fellowship in Community Health",
+        "specialization": "Ayush & Community Health",
+        "dutyStatus": "OFF_DUTY",
+        "roomNo": "OPD Room 103",
+        "tokensCount": 0,
+        "estimatedWaitMins": 0,
+        "timing": "10:00 AM - 02:00 PM",
+        "experienceYears": 14,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
+      }
     ]
   },
   {
@@ -111,24 +200,72 @@
     ],
     "doctorsOnDuty": [
       {
+        "id": "doc-chc-dindori-02-1",
         "name": "Dr. Anita Sengupta",
+        "qualification": "MBBS, MS (OBG)",
         "specialization": "Gynecology & Obstetrics",
-        "timing": "24x7 On-Call"
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 101",
+        "tokensCount": 14,
+        "estimatedWaitMins": 20,
+        "timing": "24x7 On-Call",
+        "experienceYears": 8,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       },
       {
+        "id": "doc-chc-dindori-02-2",
         "name": "Dr. Virendra Yadav",
+        "qualification": "MBBS, MD (General Medicine)",
         "specialization": "Emergency & Trauma",
-        "timing": "08:00 AM - 04:00 PM"
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 102",
+        "tokensCount": 8,
+        "estimatedWaitMins": 35,
+        "timing": "08:00 AM - 04:00 PM",
+        "experienceYears": 11,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       },
       {
+        "id": "doc-chc-dindori-02-3",
         "name": "Dr. K. S. Patel",
+        "qualification": "MBBS, MS (Ortho)",
         "specialization": "Orthopedics",
-        "timing": "09:00 AM - 02:00 PM"
+        "dutyStatus": "OFF_DUTY",
+        "roomNo": "OPD Room 103",
+        "tokensCount": 0,
+        "estimatedWaitMins": 0,
+        "timing": "09:00 AM - 02:00 PM",
+        "experienceYears": 14,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       },
       {
+        "id": "doc-chc-dindori-02-4",
         "name": "Dr. Neha Verma",
+        "qualification": "MBBS, MD (Pediatrics)",
         "specialization": "Pediatrics",
-        "timing": "09:00 AM - 01:30 PM"
+        "dutyStatus": "OFF_DUTY",
+        "roomNo": "OPD Room 104",
+        "tokensCount": 0,
+        "estimatedWaitMins": 0,
+        "timing": "09:00 AM - 01:30 PM",
+        "experienceYears": 17,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       }
     ],
     "medicineStock": [
@@ -174,6 +311,76 @@
         "status": "Out of Stock",
         "quantity": 0
       }
+    ],
+    "doctorRoster": [
+      {
+        "id": "doc-chc-dindori-02-1",
+        "name": "Dr. Anita Sengupta",
+        "qualification": "MBBS, MS (OBG)",
+        "specialization": "Gynecology & Obstetrics",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 101",
+        "tokensCount": 14,
+        "estimatedWaitMins": 20,
+        "timing": "24x7 On-Call",
+        "experienceYears": 8,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
+      },
+      {
+        "id": "doc-chc-dindori-02-2",
+        "name": "Dr. Virendra Yadav",
+        "qualification": "MBBS, MD (General Medicine)",
+        "specialization": "Emergency & Trauma",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 102",
+        "tokensCount": 8,
+        "estimatedWaitMins": 35,
+        "timing": "08:00 AM - 04:00 PM",
+        "experienceYears": 11,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
+      },
+      {
+        "id": "doc-chc-dindori-02-3",
+        "name": "Dr. K. S. Patel",
+        "qualification": "MBBS, MS (Ortho)",
+        "specialization": "Orthopedics",
+        "dutyStatus": "OFF_DUTY",
+        "roomNo": "OPD Room 103",
+        "tokensCount": 0,
+        "estimatedWaitMins": 0,
+        "timing": "09:00 AM - 02:00 PM",
+        "experienceYears": 14,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
+      },
+      {
+        "id": "doc-chc-dindori-02-4",
+        "name": "Dr. Neha Verma",
+        "qualification": "MBBS, MD (Pediatrics)",
+        "specialization": "Pediatrics",
+        "dutyStatus": "OFF_DUTY",
+        "roomNo": "OPD Room 104",
+        "tokensCount": 0,
+        "estimatedWaitMins": 0,
+        "timing": "09:00 AM - 01:30 PM",
+        "experienceYears": 17,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
+      }
     ]
   },
   {
@@ -201,14 +408,38 @@
     ],
     "doctorsOnDuty": [
       {
+        "id": "doc-phc-wai-03-1",
         "name": "Dr. Manish Srivastava",
+        "qualification": "MBBS, MD (General Medicine)",
         "specialization": "General Medicine",
-        "timing": "08:00 AM - 02:00 PM"
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 101",
+        "tokensCount": 14,
+        "estimatedWaitMins": 20,
+        "timing": "08:00 AM - 02:00 PM",
+        "experienceYears": 8,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       },
       {
+        "id": "doc-phc-wai-03-2",
         "name": "Dr. Pooja Rai",
+        "qualification": "MBBS, MD (General Medicine)",
         "specialization": "Dentistry",
-        "timing": "09:30 AM - 01:30 PM"
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 102",
+        "tokensCount": 8,
+        "estimatedWaitMins": 35,
+        "timing": "09:30 AM - 01:30 PM",
+        "experienceYears": 11,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       }
     ],
     "medicineStock": [
@@ -248,6 +479,42 @@
         "status": "In Stock",
         "quantity": 300
       }
+    ],
+    "doctorRoster": [
+      {
+        "id": "doc-phc-wai-03-1",
+        "name": "Dr. Manish Srivastava",
+        "qualification": "MBBS, MD (General Medicine)",
+        "specialization": "General Medicine",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 101",
+        "tokensCount": 14,
+        "estimatedWaitMins": 20,
+        "timing": "08:00 AM - 02:00 PM",
+        "experienceYears": 8,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
+      },
+      {
+        "id": "doc-phc-wai-03-2",
+        "name": "Dr. Pooja Rai",
+        "qualification": "MBBS, MD (General Medicine)",
+        "specialization": "Dentistry",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 102",
+        "tokensCount": 8,
+        "estimatedWaitMins": 35,
+        "timing": "09:30 AM - 01:30 PM",
+        "experienceYears": 11,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
+      }
     ]
   },
   {
@@ -276,19 +543,55 @@
     ],
     "doctorsOnDuty": [
       {
+        "id": "doc-chc-shirur-04-1",
         "name": "Dr. Meenakshi Dubey",
+        "qualification": "MBBS, MS (OBG)",
         "specialization": "Gynecology & Obstetrics",
-        "timing": "08:00 AM - 02:00 PM"
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 101",
+        "tokensCount": 14,
+        "estimatedWaitMins": 20,
+        "timing": "08:00 AM - 02:00 PM",
+        "experienceYears": 8,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       },
       {
+        "id": "doc-chc-shirur-04-2",
         "name": "Dr. Tariq Anwar",
+        "qualification": "MBBS, MD (General Medicine)",
         "specialization": "General Medicine",
-        "timing": "08:30 AM - 02:30 PM"
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 102",
+        "tokensCount": 8,
+        "estimatedWaitMins": 35,
+        "timing": "08:30 AM - 02:30 PM",
+        "experienceYears": 11,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       },
       {
+        "id": "doc-chc-shirur-04-3",
         "name": "Dr. Rahul Agrawal",
+        "qualification": "MBBS, MD (Pediatrics)",
         "specialization": "Pediatrics",
-        "timing": "09:00 AM - 01:00 PM"
+        "dutyStatus": "OFF_DUTY",
+        "roomNo": "OPD Room 103",
+        "tokensCount": 0,
+        "estimatedWaitMins": 0,
+        "timing": "09:00 AM - 01:00 PM",
+        "experienceYears": 14,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       }
     ],
     "medicineStock": [
@@ -328,6 +631,59 @@
         "status": "Low Stock",
         "quantity": 5
       }
+    ],
+    "doctorRoster": [
+      {
+        "id": "doc-chc-shirur-04-1",
+        "name": "Dr. Meenakshi Dubey",
+        "qualification": "MBBS, MS (OBG)",
+        "specialization": "Gynecology & Obstetrics",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 101",
+        "tokensCount": 14,
+        "estimatedWaitMins": 20,
+        "timing": "08:00 AM - 02:00 PM",
+        "experienceYears": 8,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
+      },
+      {
+        "id": "doc-chc-shirur-04-2",
+        "name": "Dr. Tariq Anwar",
+        "qualification": "MBBS, MD (General Medicine)",
+        "specialization": "General Medicine",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 102",
+        "tokensCount": 8,
+        "estimatedWaitMins": 35,
+        "timing": "08:30 AM - 02:30 PM",
+        "experienceYears": 11,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
+      },
+      {
+        "id": "doc-chc-shirur-04-3",
+        "name": "Dr. Rahul Agrawal",
+        "qualification": "MBBS, MD (Pediatrics)",
+        "specialization": "Pediatrics",
+        "dutyStatus": "OFF_DUTY",
+        "roomNo": "OPD Room 103",
+        "tokensCount": 0,
+        "estimatedWaitMins": 0,
+        "timing": "09:00 AM - 01:00 PM",
+        "experienceYears": 14,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
+      }
     ]
   },
   {
@@ -355,14 +711,38 @@
     ],
     "doctorsOnDuty": [
       {
+        "id": "doc-phc-shahapur-05-1",
         "name": "Dr. R. P. Tiwari",
+        "qualification": "MBBS, MD (General Medicine)",
         "specialization": "General Medicine",
-        "timing": "08:00 AM - 02:00 PM"
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 101",
+        "tokensCount": 14,
+        "estimatedWaitMins": 20,
+        "timing": "08:00 AM - 02:00 PM",
+        "experienceYears": 8,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       },
       {
+        "id": "doc-phc-shahapur-05-2",
         "name": "Dr. Suniti Mishra",
+        "qualification": "MBBS, MD (Pediatrics)",
         "specialization": "Pediatrics",
-        "timing": "09:00 AM - 01:00 PM"
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 102",
+        "tokensCount": 8,
+        "estimatedWaitMins": 35,
+        "timing": "09:00 AM - 01:00 PM",
+        "experienceYears": 11,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       }
     ],
     "medicineStock": [
@@ -402,6 +782,42 @@
         "status": "In Stock",
         "quantity": 90
       }
+    ],
+    "doctorRoster": [
+      {
+        "id": "doc-phc-shahapur-05-1",
+        "name": "Dr. R. P. Tiwari",
+        "qualification": "MBBS, MD (General Medicine)",
+        "specialization": "General Medicine",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 101",
+        "tokensCount": 14,
+        "estimatedWaitMins": 20,
+        "timing": "08:00 AM - 02:00 PM",
+        "experienceYears": 8,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
+      },
+      {
+        "id": "doc-phc-shahapur-05-2",
+        "name": "Dr. Suniti Mishra",
+        "qualification": "MBBS, MD (Pediatrics)",
+        "specialization": "Pediatrics",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 102",
+        "tokensCount": 8,
+        "estimatedWaitMins": 35,
+        "timing": "09:00 AM - 01:00 PM",
+        "experienceYears": 11,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
+      }
     ]
   },
   {
@@ -431,14 +847,38 @@
     ],
     "doctorsOnDuty": [
       {
+        "id": "doc-ggh-kurnool-06-1",
         "name": "Dr. K. S. Reddy",
+        "qualification": "MBBS, MD (General Medicine)",
         "specialization": "Emergency & Trauma",
-        "timing": "24x7 Emergency"
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 101",
+        "tokensCount": 14,
+        "estimatedWaitMins": 20,
+        "timing": "24x7 Emergency",
+        "experienceYears": 8,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       },
       {
+        "id": "doc-ggh-kurnool-06-2",
         "name": "Dr. P. Lakshmi",
+        "qualification": "MBBS, MS (OBG)",
         "specialization": "Obstetrics & Gynecology",
-        "timing": "08:00 AM - 02:00 PM"
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 102",
+        "tokensCount": 8,
+        "estimatedWaitMins": 35,
+        "timing": "08:00 AM - 02:00 PM",
+        "experienceYears": 11,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       }
     ],
     "medicineStock": [
@@ -459,6 +899,42 @@
         "category": "Hydration / Electrolytes",
         "status": "In Stock",
         "quantity": 1200
+      }
+    ],
+    "doctorRoster": [
+      {
+        "id": "doc-ggh-kurnool-06-1",
+        "name": "Dr. K. S. Reddy",
+        "qualification": "MBBS, MD (General Medicine)",
+        "specialization": "Emergency & Trauma",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 101",
+        "tokensCount": 14,
+        "estimatedWaitMins": 20,
+        "timing": "24x7 Emergency",
+        "experienceYears": 8,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
+      },
+      {
+        "id": "doc-ggh-kurnool-06-2",
+        "name": "Dr. P. Lakshmi",
+        "qualification": "MBBS, MS (OBG)",
+        "specialization": "Obstetrics & Gynecology",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 102",
+        "tokensCount": 8,
+        "estimatedWaitMins": 35,
+        "timing": "08:00 AM - 02:00 PM",
+        "experienceYears": 11,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       }
     ]
   },
@@ -487,9 +963,38 @@
     ],
     "doctorsOnDuty": [
       {
+        "id": "doc-uphc-kurnool-07-1",
         "name": "Dr. Venkat Rao",
+        "qualification": "MBBS, MD (General Medicine)",
         "specialization": "General Medicine",
-        "timing": "08:00 AM - 02:00 PM"
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 101",
+        "tokensCount": 14,
+        "estimatedWaitMins": 20,
+        "timing": "08:00 AM - 02:00 PM",
+        "experienceYears": 8,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
+      },
+      {
+        "id": "doc-uphc-kurnool-07-2",
+        "name": "Dr. Anita Joshi",
+        "qualification": "MBBS, DCH (Child Health)",
+        "specialization": "Pediatrics & Maternal Health",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 102",
+        "tokensCount": 9,
+        "estimatedWaitMins": 15,
+        "timing": "09:00 AM - 02:30 PM",
+        "experienceYears": 10,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       }
     ],
     "medicineStock": [
@@ -510,6 +1015,42 @@
         "category": "Hydration",
         "status": "In Stock",
         "quantity": 600
+      }
+    ],
+    "doctorRoster": [
+      {
+        "id": "doc-uphc-kurnool-07-1",
+        "name": "Dr. Venkat Rao",
+        "qualification": "MBBS, MD (General Medicine)",
+        "specialization": "General Medicine",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 101",
+        "tokensCount": 14,
+        "estimatedWaitMins": 20,
+        "timing": "08:00 AM - 02:00 PM",
+        "experienceYears": 8,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
+      },
+      {
+        "id": "doc-uphc-kurnool-07-2",
+        "name": "Dr. Anita Joshi",
+        "qualification": "MBBS, DCH (Child Health)",
+        "specialization": "Pediatrics & Maternal Health",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 102",
+        "tokensCount": 9,
+        "estimatedWaitMins": 15,
+        "timing": "09:00 AM - 02:30 PM",
+        "experienceYears": 10,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       }
     ]
   },
@@ -540,14 +1081,38 @@
     ],
     "doctorsOnDuty": [
       {
+        "id": "doc-ggh-anantapur-08-1",
         "name": "Dr. K. Srinivasulu",
+        "qualification": "MBBS, MD (General Medicine)",
         "specialization": "Emergency & Trauma",
-        "timing": "24x7 On-Duty"
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 101",
+        "tokensCount": 14,
+        "estimatedWaitMins": 20,
+        "timing": "24x7 On-Duty",
+        "experienceYears": 8,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       },
       {
+        "id": "doc-ggh-anantapur-08-2",
         "name": "Dr. M. Lakshmi",
+        "qualification": "MBBS, MD (Pediatrics)",
         "specialization": "Pediatrics",
-        "timing": "08:30 AM - 02:00 PM"
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 102",
+        "tokensCount": 8,
+        "estimatedWaitMins": 35,
+        "timing": "08:30 AM - 02:00 PM",
+        "experienceYears": 11,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       }
     ],
     "medicineStock": [
@@ -574,6 +1139,42 @@
         "category": "Hydration",
         "status": "In Stock",
         "quantity": 1500
+      }
+    ],
+    "doctorRoster": [
+      {
+        "id": "doc-ggh-anantapur-08-1",
+        "name": "Dr. K. Srinivasulu",
+        "qualification": "MBBS, MD (General Medicine)",
+        "specialization": "Emergency & Trauma",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 101",
+        "tokensCount": 14,
+        "estimatedWaitMins": 20,
+        "timing": "24x7 On-Duty",
+        "experienceYears": 8,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
+      },
+      {
+        "id": "doc-ggh-anantapur-08-2",
+        "name": "Dr. M. Lakshmi",
+        "qualification": "MBBS, MD (Pediatrics)",
+        "specialization": "Pediatrics",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 102",
+        "tokensCount": 8,
+        "estimatedWaitMins": 35,
+        "timing": "08:30 AM - 02:00 PM",
+        "experienceYears": 11,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       }
     ]
   },
@@ -602,9 +1203,38 @@
     ],
     "doctorsOnDuty": [
       {
+        "id": "doc-uphc-anantapur-09-1",
         "name": "Dr. P. Ramesh",
+        "qualification": "MBBS, MD (General Medicine)",
         "specialization": "General Medicine",
-        "timing": "08:00 AM - 02:00 PM"
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 101",
+        "tokensCount": 14,
+        "estimatedWaitMins": 20,
+        "timing": "08:00 AM - 02:00 PM",
+        "experienceYears": 8,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
+      },
+      {
+        "id": "doc-uphc-anantapur-09-2",
+        "name": "Dr. B. Ramanjaneyulu",
+        "qualification": "MBBS, DCH (Child Health)",
+        "specialization": "Pediatrics & Maternal Health",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 102",
+        "tokensCount": 9,
+        "estimatedWaitMins": 15,
+        "timing": "09:00 AM - 02:30 PM",
+        "experienceYears": 10,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       }
     ],
     "medicineStock": [
@@ -631,6 +1261,42 @@
         "category": "Hydration",
         "status": "In Stock",
         "quantity": 800
+      }
+    ],
+    "doctorRoster": [
+      {
+        "id": "doc-uphc-anantapur-09-1",
+        "name": "Dr. P. Ramesh",
+        "qualification": "MBBS, MD (General Medicine)",
+        "specialization": "General Medicine",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 101",
+        "tokensCount": 14,
+        "estimatedWaitMins": 20,
+        "timing": "08:00 AM - 02:00 PM",
+        "experienceYears": 8,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
+      },
+      {
+        "id": "doc-uphc-anantapur-09-2",
+        "name": "Dr. B. Ramanjaneyulu",
+        "qualification": "MBBS, DCH (Child Health)",
+        "specialization": "Pediatrics & Maternal Health",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 102",
+        "tokensCount": 9,
+        "estimatedWaitMins": 15,
+        "timing": "09:00 AM - 02:30 PM",
+        "experienceYears": 10,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       }
     ]
   },
@@ -659,9 +1325,38 @@
     ],
     "doctorsOnDuty": [
       {
+        "id": "doc-arun-anantapur-10-1",
         "name": "Dr. Arun Kumar",
+        "qualification": "MBBS, MD (Pediatrics)",
         "specialization": "Pediatrics",
-        "timing": "09:00 AM - 03:00 PM"
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 101",
+        "tokensCount": 14,
+        "estimatedWaitMins": 20,
+        "timing": "09:00 AM - 03:00 PM",
+        "experienceYears": 8,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
+      },
+      {
+        "id": "doc-arun-anantapur-10-2",
+        "name": "Dr. B. Ramanjaneyulu",
+        "qualification": "MBBS, DCH (Child Health)",
+        "specialization": "Pediatrics & Maternal Health",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 102",
+        "tokensCount": 9,
+        "estimatedWaitMins": 15,
+        "timing": "09:00 AM - 02:30 PM",
+        "experienceYears": 10,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       }
     ],
     "medicineStock": [
@@ -682,6 +1377,42 @@
         "category": "Hydration",
         "status": "In Stock",
         "quantity": 1100
+      }
+    ],
+    "doctorRoster": [
+      {
+        "id": "doc-arun-anantapur-10-1",
+        "name": "Dr. Arun Kumar",
+        "qualification": "MBBS, MD (Pediatrics)",
+        "specialization": "Pediatrics",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 101",
+        "tokensCount": 14,
+        "estimatedWaitMins": 20,
+        "timing": "09:00 AM - 03:00 PM",
+        "experienceYears": 8,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
+      },
+      {
+        "id": "doc-arun-anantapur-10-2",
+        "name": "Dr. B. Ramanjaneyulu",
+        "qualification": "MBBS, DCH (Child Health)",
+        "specialization": "Pediatrics & Maternal Health",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "OPD Room 102",
+        "tokensCount": 9,
+        "estimatedWaitMins": 15,
+        "timing": "09:00 AM - 02:30 PM",
+        "experienceYears": 10,
+        "languages": [
+          "Telugu",
+          "Hindi",
+          "English"
+        ]
       }
     ]
   }

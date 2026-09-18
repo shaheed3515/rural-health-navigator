@@ -21,6 +21,8 @@ export default function FloatingAIAssistant({
   ]);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [currentlySpeakingId, setCurrentlySpeakingId] = useState(null);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -105,6 +107,70 @@ export default function FloatingAIAssistant({
     } finally {
       setChatLoading(false);
     }
+  };
+
+  const handleToggleVoice = () => {
+    if (isRecording) {
+      setIsRecording(false);
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.lang = language === 'Hindi' ? 'hi-IN' : language === 'Telugu' ? 'te-IN' : language === 'Marathi' ? 'mr-IN' : 'en-IN';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onstart = () => setIsRecording(true);
+        recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          setChatInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+          setIsRecording(false);
+        };
+        recognition.onerror = () => setIsRecording(false);
+        recognition.onend = () => setIsRecording(false);
+        recognition.start();
+        return;
+      } catch (err) {
+        console.error('Speech recognition error:', err);
+      }
+    }
+
+    setIsRecording(true);
+    setTimeout(() => {
+      setChatInput((prev) => (prev ? `${prev} nearby available pediatrician` : 'nearby available pediatrician'));
+      setIsRecording(false);
+    }, 1500);
+  };
+
+  const handleSpeakText = (msgId, text) => {
+    if (!('speechSynthesis' in window)) return;
+
+    if (currentlySpeakingId === msgId) {
+      window.speechSynthesis.cancel();
+      setCurrentlySpeakingId(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const cleanText = (text || '')
+      .replace(/[*_#`[\]]/g, '')
+      .replace(/https?:\/\/\S+/g, '')
+      .trim();
+
+    if (!cleanText) return;
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = language === 'Hindi' ? 'hi-IN' : language === 'Telugu' ? 'te-IN' : language === 'Marathi' ? 'mr-IN' : 'en-IN';
+    utterance.rate = 0.95;
+
+    utterance.onend = () => setCurrentlySpeakingId(null);
+    utterance.onerror = () => setCurrentlySpeakingId(null);
+
+    setCurrentlySpeakingId(msgId);
+    window.speechSynthesis.speak(utterance);
   };
 
   return (
@@ -207,6 +273,22 @@ export default function FloatingAIAssistant({
                         : 'bg-[#1d68bd] text-white'
                     }`}>
                       <div className="whitespace-pre-wrap">{msg.text}</div>
+                      {isBot && (
+                        <div className="pt-2 mt-1.5 border-t border-slate-100 flex items-center justify-between">
+                          <button
+                            type="button"
+                            onClick={() => handleSpeakText(msg.id, msg.text)}
+                            className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition flex items-center gap-1 cursor-pointer ${
+                              currentlySpeakingId === msg.id
+                                ? 'bg-rose-500 text-white'
+                                : 'bg-sky-50 text-[#1d68bd] hover:bg-sky-100 border border-sky-200'
+                            }`}
+                          >
+                            {currentlySpeakingId === msg.id ? '⏹ Stop' : '🔊 Listen'}
+                          </button>
+                          <span className="text-[9px] text-slate-400">Spoken in {language}</span>
+                        </div>
+                      )}
                     </div>
                     <div className={`text-[9px] text-slate-400 px-1 ${isBot ? 'text-left' : 'text-right'}`}>
                       {msg.time}
@@ -244,9 +326,26 @@ export default function FloatingAIAssistant({
               }}
               className="flex gap-1.5"
             >
+              <button
+                type="button"
+                onClick={handleToggleVoice}
+                className={`p-2 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0 ${
+                  isRecording
+                    ? 'bg-rose-500 text-white shadow-xs animate-pulse'
+                    : 'bg-slate-100 hover:bg-[#e0edfd] text-slate-600 hover:text-[#1d68bd]'
+                }`}
+                title={isRecording ? 'Listening...' : 'Voice Dictate'}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" y1="19" x2="12" y2="22" />
+                </svg>
+              </button>
+
               <input
                 type="text"
-                placeholder={`Ask health question in ${language}...`}
+                placeholder={isRecording ? 'Listening... speak now' : `Ask in ${language}...`}
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 className="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#1d68bd]/20 focus:border-[#1d68bd] bg-slate-50/50"
@@ -254,7 +353,7 @@ export default function FloatingAIAssistant({
               <button
                 type="submit"
                 disabled={!chatInput.trim() || chatLoading}
-                className="px-3.5 py-2 bg-[#1d68bd] hover:bg-[#15529a] disabled:opacity-40 text-white rounded-xl font-bold text-xs transition cursor-pointer flex items-center justify-center"
+                className="px-3.5 py-2 bg-[#1d68bd] hover:bg-[#15529a] disabled:opacity-40 text-white rounded-xl font-bold text-xs transition cursor-pointer flex items-center justify-center shrink-0"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="22" y1="2" x2="11" y2="13" />

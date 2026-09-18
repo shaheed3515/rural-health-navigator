@@ -6,3 +6,5 @@ frontend/.env
 dist/
 build/
 .DS_Store
+scratch/
+*.png

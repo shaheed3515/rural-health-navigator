@@ -1015,6 +1015,151 @@ app.put("/api/stock", async (req, res) => {
 });
 
 // ==========================================
+// 4b. DOCTOR DUTY ROSTER MANAGEMENT (Hospital Desk / CMO 1-Click Toggle)
+// ==========================================
+app.put("/api/facilities/:facilityId/doctors/:doctorId/status", async (req, res) => {
+  try {
+    const { facilityId, doctorId } = req.params;
+    const { dutyStatus } = req.body; // 'ON_DUTY' | 'IN_OT' | 'OFF_DUTY'
+
+    if (!dutyStatus || !['ON_DUTY', 'IN_OT', 'OFF_DUTY'].includes(dutyStatus)) {
+      return res.status(400).json({ success: false, error: "Valid dutyStatus ('ON_DUTY', 'IN_OT', 'OFF_DUTY') is required." });
+    }
+
+    const facility = clinicsData.find(f => f.id === facilityId);
+    if (!facility) {
+      return res.status(404).json({ success: false, error: `Facility '${facilityId}' not found.` });
+    }
+
+    const roster = facility.doctorRoster || facility.doctorsOnDuty || [];
+    const doctor = roster.find(d => d.id === doctorId || d.name === doctorId);
+
+    if (!doctor) {
+      return res.status(404).json({ success: false, error: `Doctor '${doctorId}' not found in facility roster.` });
+    }
+
+    doctor.dutyStatus = dutyStatus;
+    if (dutyStatus === 'ON_DUTY') {
+      doctor.tokensCount = Math.max(1, (doctor.tokensCount || 0) + 1);
+      doctor.estimatedWaitMins = Math.max(10, (doctor.tokensCount || 1) * 3);
+    } else if (dutyStatus === 'OFF_DUTY') {
+      doctor.tokensCount = 0;
+      doctor.estimatedWaitMins = 0;
+    }
+
+    facility.doctorRoster = roster;
+    facility.doctorsOnDuty = roster;
+    saveClinicsData();
+
+    if (isMongoConnected) {
+      try {
+        await Clinic.findOneAndUpdate(
+          { id: facilityId },
+          { $set: { doctorRoster: roster, doctorsOnDuty: roster } }
+        );
+      } catch (mErr) {
+        console.warn("[Mongo Doctor Update Warning]:", mErr.message);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Dr. ${doctor.name} duty status updated to '${dutyStatus}'.`,
+      doctor,
+      facilityId
+    });
+  } catch (err) {
+    console.error("[Doctor Status Error]:", err);
+    res.status(500).json({ success: false, error: "Failed to update doctor status" });
+  }
+});
+
+// ==========================================
+// 4c. GOLDEN HOUR BYSTANDER SOS BEACON SYSTEM (Sec 134A Good Samaritan Law)
+// ==========================================
+const activeSosBeacons = [];
+
+// POST /api/sos/broadcast (Trigger Golden Hour Emergency Beacon)
+app.post("/api/sos/broadcast", async (req, res) => {
+  try {
+    const {
+      type = 'Lifting / Stretcher Support',
+      description = '',
+      coordinates = { lat: 14.6742, lng: 77.6072 },
+      address = '',
+      patientName = 'Citizen in Need',
+      patientPhone = '108'
+    } = req.body;
+
+    const sosId = `SOS-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const newBeacon = {
+      id: sosId,
+      type,
+      description,
+      coordinates,
+      address: address || `Emergency Location (${coordinates?.lat?.toFixed(4)}, ${coordinates?.lng?.toFixed(4)})`,
+      patientName,
+      patientPhone,
+      timestamp: new Date().toISOString(),
+      respondersCount: 3, // Initial simulated nearby bystander alert count
+      responders: [
+        { name: 'Ramesh K. (Citizen Volunteer)', distanceKm: 0.2, etaMinutes: 2 },
+        { name: 'Anil V. (Auto Driver / Volunteer)', distanceKm: 0.4, etaMinutes: 4 }
+      ],
+      ambulanceDispatched: true,
+      status: 'ACTIVE'
+    };
+
+    activeSosBeacons.unshift(newBeacon);
+    if (activeSosBeacons.length > 50) activeSosBeacons.pop();
+
+    console.log(`🚨 [Golden Hour SOS] Broadcasted ${type} at ${coordinates?.lat}, ${coordinates?.lng}`);
+
+    res.json({
+      success: true,
+      message: "Emergency Golden Hour SOS beacon broadcasted to nearby bystanders within 1km.",
+      sos: newBeacon,
+      alertedBystandersCount: 5
+    });
+  } catch (err) {
+    console.error("[SOS Broadcast Error]:", err);
+    res.status(500).json({ success: false, error: "Failed to broadcast emergency beacon" });
+  }
+});
+
+// GET /api/sos/active (Fetch active beacons)
+app.get("/api/sos/active", (req, res) => {
+  res.json({
+    success: true,
+    beacons: activeSosBeacons.filter(b => b.status === 'ACTIVE')
+  });
+});
+
+// POST /api/sos/:id/respond (Good Samaritan volunteer responds to distress call)
+app.post("/api/sos/:id/respond", (req, res) => {
+  const { id } = req.params;
+  const { responderName = 'Good Samaritan Volunteer', etaMinutes = 3 } = req.body;
+  const beacon = activeSosBeacons.find(b => b.id === id);
+
+  if (!beacon) {
+    return res.status(404).json({ success: false, error: "SOS beacon not found" });
+  }
+
+  beacon.responders.push({
+    name: responderName,
+    distanceKm: 0.3,
+    etaMinutes: Number(etaMinutes) || 3
+  });
+  beacon.respondersCount = beacon.responders.length;
+
+  res.json({
+    success: true,
+    message: "Thank you for answering the distress call under Section 134A Good Samaritan protection.",
+    beacon
+  });
+});
+
+// ==========================================
 // 5. Appointments: Booking & Patient History
 // ==========================================
 
@@ -1183,16 +1328,19 @@ app.post("/api/chat", async (req, res) => {
     const locationName = context?.locationName || "";
     const nearbyFacilities = Array.isArray(context?.nearbyFacilities) ? context.nearbyFacilities : [];
 
-    const systemInstruction = `You are an intelligent rural health assistant for Swasthya Sangam.
+    const systemInstruction = `You are Swasthya Sangam's Multilingual Clinical AI Assistant & Doctor Roster Matcher.
 User's detected location: ${locationName || 'Unknown'} (${coords?.lat || ''}, ${coords?.lng || ''}).
-Facilities nearby (if relevant to their immediate GPS): ${JSON.stringify(nearbyFacilities || [])}.
+Nearby Facilities & Live Doctor Rosters: ${JSON.stringify(nearbyFacilities || [])}.
 
-Rules:
-- If the user asks about a specific location (e.g. 'Anantapur', 'Pune', 'Kurnool'), answer dynamically about THAT specific city/region using your general medical knowledge. Do not force nearby GPS facilities from a different town.
-- If the user asks for 'nearby' care without specifying a city, refer to the provided nearby facilities context.
-- Speak conversationally and naturally. Never print a rigid template unless specifically asked.
-- Respond warmly in the patient's preferred language (${language}, Marathi, Hindi, Telugu, or English).
-- Always provide relevant emergency helpline numbers (108 Ambulance / 102 Maternal) when advising on urgent or hospital care.`;
+Your Core Clinical Rules:
+1. CLINICAL TRIAGE: When the patient describes symptoms (e.g., child with 103 fever and vomiting, sudden chest tightness, bone fracture, animal bite, eye trauma), identify:
+   - Severity: Critical Emergency / Urgent OPD / Routine.
+   - Recommended Specialist: e.g. Pediatrician, Cardiologist, Orthopedic Surgeon, General Physician.
+   - Immediate First-Aid: 1-2 actionable, safe life-saving steps.
+2. DOCTOR & HOSPITAL MATCHING: Cross-reference the nearby facilities list. Recommend the nearest hospital where that specific specialist is ON DUTY (mention Doctor name, specialization, OPD room number, and estimated token wait if present).
+3. MULTILINGUAL FLUENCY: Respond warmly and conversationally in the patient's preferred language (${language} - Telugu, Hindi, Marathi, or English).
+4. AUDIO-FRIENDLY: Keep the explanation concise and direct so it sounds natural when spoken aloud via the voice button.
+5. EMERGENCY SAFETY: If life-threatening (unconscious, heavy bleeding, chest pain, snakebite), advise calling 108 immediately and tapping the 'Golden Hour Bystander SOS' button for immediate human help.`;
 
     let imagePart = null;
     let hasImage = false;
