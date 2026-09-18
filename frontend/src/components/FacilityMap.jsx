@@ -46,11 +46,11 @@ export default function FacilityMap({
         attributionControl: false
       });
 
-      // High-performance CartoDB Voyager raster tiles (never blocked by CORS / rate limits)
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap contributors, &copy; CARTO',
+      // High-performance Humanitarian OpenStreetMap (OSM HOT) tiles - 100% free, no API key, zero watermarks
+      L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors, Tiles style by Humanitarian OpenStreetMap Team',
         maxZoom: 19,
-        subdomains: 'abcd'
+        subdomains: 'abc'
       }).addTo(map);
 
       L.control.attribution({ position: 'bottomright', prefix: 'Swasthya Sangam GIS' }).addTo(map);
