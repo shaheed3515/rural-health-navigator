@@ -3,6 +3,7 @@ import FacilityMap from './components/FacilityMap';
 import LiveCameraModal from './components/LiveCameraModal';
 import DoctorRosterModal from './components/DoctorRosterModal';
 import SosBeaconModal from './components/SosBeaconModal';
+import VoiceCallModal from './components/VoiceCallModal';
 import { getTranslation } from './translations';
 import './App.css';
 import {
@@ -203,6 +204,7 @@ export default function App() {
   const [showRosterModal, setShowRosterModal] = useState(false);
   const [rosterFacility, setRosterFacility] = useState(null);
   const [showSosModal, setShowSosModal] = useState(false);
+  const [showVoiceCall, setShowVoiceCall] = useState(false);
   const [currentlySpeakingId, setCurrentlySpeakingId] = useState(null);
 
   // Subtle Light-Blue Toast (auto-dismisses in 3 seconds)
@@ -1728,55 +1730,70 @@ export default function App() {
             {/* ========================================================= */}
             {activeTab === 'dashboard' && (
               <div className="space-y-6">
-                {/* Hero Greeting & Locality Status Banner */}
-                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 p-6 text-white shadow-sm">
-                  {/* Subtle Background Radial Highlights */}
-                  <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-blue-500/10 blur-3xl pointer-events-none"></div>
-                  <div className="absolute bottom-0 left-1/3 -mb-16 w-48 h-48 rounded-full bg-emerald-500/10 blur-2xl pointer-events-none"></div>
+                {/* Clinical Master Hero & Locality Status Card */}
+                <div className="relative overflow-hidden rounded-2xl bg-white border border-slate-200/90 p-5 sm:p-6 shadow-xs border-l-4 border-l-[#1d68bd]">
+                  {/* Subtle soft medical ambient background */}
+                  <div className="absolute top-0 right-0 w-96 h-full bg-gradient-to-l from-[#f0f7ff]/80 via-transparent to-transparent pointer-events-none"></div>
 
-                  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="space-y-1.5">
-                      <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/15 text-[11px] font-medium text-slate-200">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+                    <div className="space-y-2">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f0f7ff] border border-[#bfdbfe] text-[11px] font-bold text-[#1d68bd] shadow-2xs">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                         <span>
                           {userLocation
                             ? `${t('gpsActivePrefix')}: ${userLocation.lat.toFixed(2)}°N, ${userLocation.lng.toFixed(2)}°E`
                             : t('detectingCoverage')}
                         </span>
                       </div>
-                      <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                      <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
                         {t('welcomeBackPrefix')} {currentUser?.name?.split(' ')[0] || 'Citizen'}
                       </h1>
-                      <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
+                      <p className="text-xs sm:text-sm text-slate-600 max-w-xl leading-relaxed font-normal">
                         {t('heroSubtitle')}
                       </p>
                     </div>
 
-                    {/* Quick Stats Cluster */}
-                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0 pt-2 md:pt-0">
-                      <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
-                        <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-300 flex items-center justify-center font-bold text-xs">
+                    {/* Quick Stats & Live Actions Cluster */}
+                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0 pt-1 lg:pt-0">
+                      {/* Metric 1: Verified Centers */}
+                      <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200/80 shadow-2xs">
+                        <div className="w-8 h-8 rounded-lg bg-[#e0edfd] text-[#1d68bd] border border-[#bfdbfe] flex items-center justify-center font-black text-xs">
                           {facilities?.length || 0}
                         </div>
                         <div>
                           <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">{t('centersLabel')}</div>
-                          <div className="text-xs font-bold text-white">{t('centersVerified')}</div>
+                          <div className="text-xs font-bold text-slate-800">{t('centersVerified')}</div>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-xs">
+                      {/* Metric 2: 24/7 Triage */}
+                      <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200/80 shadow-2xs">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center font-black text-xs">
                           24/7
                         </div>
                         <div>
                           <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">{t('triageLabel')}</div>
-                          <div className="text-xs font-bold text-white">{t('triageActive')}</div>
+                          <div className="text-xs font-bold text-slate-800">{t('triageActive')}</div>
                         </div>
                       </div>
 
+                      {/* Action 1: Call AI Doctor (Voice Call) */}
+                      <button
+                        onClick={() => setShowVoiceCall(true)}
+                        className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition cursor-pointer shadow-xs active:scale-98"
+                        title="Start In-App Voice Call with Dr. Sangam (AI Medical Officer)"
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="animate-bounce">
+                          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                        </svg>
+                        <span>Call AI Doctor</span>
+                      </button>
+
+                      {/* Action 2: SOS Beacon */}
                       <button
                         onClick={() => setShowSosModal(true)}
-                        className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-600/90 hover:bg-rose-600 text-white text-xs font-bold transition cursor-pointer shadow-sm border border-rose-500/50"
+                        className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-bold transition cursor-pointer shadow-xs border border-rose-700 active:scale-98"
+                        title="Broadcast Emergency Golden Hour SOS Beacon"
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse">
                           <circle cx="12" cy="12" r="2"/>
@@ -5018,6 +5035,16 @@ export default function App() {
         onClose={() => setShowSosModal(false)}
         userLocation={userLocation}
         patientName={currentUser?.fullName || currentUser?.name || 'Citizen in Need'}
+      />
+
+      {/* In-App AI Voice Call & 108 Merge Modal */}
+      <VoiceCallModal
+        isOpen={showVoiceCall}
+        onClose={() => setShowVoiceCall(false)}
+        language={language}
+        userLocation={userLocation}
+        onTriggerSos={() => setShowSosModal(true)}
+        showToast={showToast}
       />
     </div>
   );
