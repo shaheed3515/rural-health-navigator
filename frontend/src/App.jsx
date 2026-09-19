@@ -1277,94 +1277,10 @@ export default function App() {
         </div>
       </div>
 
-      {/* 1. Government Utility Sub-Header Strip (Matching Reference) */}
-      <div className="bg-slate-50 border-b border-slate-200/80 px-4 sm:px-6 py-1 text-xs text-slate-600 flex items-center justify-between shrink-0">
-        {/* Left: Department & Authority Identifiers */}
-        <div className="flex items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap">
-          <span className="text-[#1d68bd]">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
-          </span>
-          <span className="font-bold text-slate-800 text-[11px] tracking-tight">
-            SWASTHYA SANGAM (स्वास्थ्य संगम) · PS 26133
-          </span>
-          <span className="text-slate-300 hidden sm:inline">|</span>
-          <span className="text-slate-500 text-[11px] hidden sm:inline font-medium">
-            Public Health Department, Government of Maharashtra
-          </span>
-        </div>
-
-        {/* Right: Language Selector & Accessibility Text-Size Controls */}
-        <div className="flex items-center gap-2 shrink-0">
-          {/* Language Dropdown */}
-          <div className="relative flex items-center gap-1 px-2 py-0.5 rounded border border-slate-200 bg-white text-[11px] font-medium text-slate-700 shadow-2xs">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="2" y1="12" x2="22" y2="12"/>
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10z"/>
-            </svg>
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="bg-transparent text-slate-700 font-semibold focus:outline-none cursor-pointer pr-1"
-            >
-              <option value="English">English</option>
-              <option value="Hindi">हिंदी (Hindi)</option>
-              <option value="Marathi">मराठी (Marathi)</option>
-              <option value="Telugu">తెలుగు (Telugu)</option>
-            </select>
-          </div>
-
-          {/* Accessibility Font Sizers (A- / A / A+) */}
-          <div className="hidden sm:flex items-center rounded border border-slate-200 bg-white text-[11px] font-bold overflow-hidden shadow-2xs">
-            <button 
-              type="button" 
-              onClick={() => {
-                setFontSizeLevel((prev) => Math.max(85, prev - 10));
-                showToast('Display text size: Reduced (A-)', 'info');
-              }} 
-              className={`px-1.5 py-0.5 border-r border-slate-200 transition cursor-pointer ${
-                fontSizeLevel < 100 ? 'bg-[#1d68bd] text-white font-black' : 'text-slate-600 hover:bg-slate-100'
-              }`}
-              title="Decrease font size"
-            >
-              A-
-            </button>
-            <button 
-              type="button" 
-              onClick={() => {
-                setFontSizeLevel(100);
-                showToast('Display text size: Standard (A)', 'info');
-              }} 
-              className={`px-1.5 py-0.5 transition cursor-pointer ${
-                fontSizeLevel === 100 ? 'bg-[#1d68bd] text-white font-black' : 'text-slate-600 hover:bg-slate-100'
-              }`} 
-              title="Default font size"
-            >
-              A
-            </button>
-            <button 
-              type="button" 
-              onClick={() => {
-                setFontSizeLevel((prev) => Math.min(125, prev + 10));
-                showToast('Display text size: Enlarged (A+)', 'info');
-              }} 
-              className={`px-1.5 py-0.5 border-l border-slate-200 transition cursor-pointer ${
-                fontSizeLevel > 100 ? 'bg-[#1d68bd] text-white font-black' : 'text-slate-600 hover:bg-slate-100'
-              }`} 
-              title="Increase font size"
-            >
-              A+
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Main Full-Width Government & App Header Bar */}
-      <header className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2 shadow-2xs shrink-0 z-30">
+      {/* Unified Sleek Healthcare Navigation Bar */}
+      <header className="bg-white border-b border-slate-200/80 px-4 sm:px-6 py-2.5 shadow-xs shrink-0 z-30 sticky top-0">
         <div className="flex items-center justify-between gap-3">
-          {/* Left Group: Mobile Menu Trigger + Govt Emblem + App Brand */}
+          {/* Left Group: Mobile Trigger + Govt Emblem + Brand */}
           <div className="flex items-center gap-3 min-w-0">
             {/* Mobile Hamburger Drawer Trigger */}
             <button
@@ -1384,20 +1300,20 @@ export default function App() {
               <img 
                 src="/maha-logo.png" 
                 alt="Government of Maharashtra" 
-                className="h-9 w-auto object-contain flex-shrink-0"
+                className="h-8 sm:h-9 w-auto object-contain flex-shrink-0"
               />
               <div className="hidden sm:flex flex-col text-left leading-none">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-tight">GOVERNMENT OF</span>
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-tight">GOVERNMENT OF</span>
                 <span className="text-xs font-black text-slate-800 uppercase tracking-tight leading-tight">MAHARASHTRA</span>
                 <span className="text-[9px] font-medium text-slate-500 leading-tight">सार्वजनिक आरोग्य विभाग</span>
               </div>
             </div>
 
             {/* Vertical Divider */}
-            <div className="h-8 w-[1px] bg-slate-200 flex-shrink-0" />
+            <div className="hidden sm:block h-7 w-[1px] bg-slate-200 flex-shrink-0" />
 
             {/* App Logo & Brand Title */}
-            <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
               <div className="w-8 h-8 rounded-xl bg-[#1d68bd] text-white flex items-center justify-center font-bold text-base shadow-sm shadow-[#1d68bd]/25 flex-shrink-0">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 5v14M5 12h14" />
@@ -1408,97 +1324,132 @@ export default function App() {
                   <span className="font-black text-slate-900 text-sm sm:text-base tracking-tight leading-none truncate">
                     SWASTHYA SANGAM
                   </span>
-                  <span className="px-1.5 py-0.5 text-[9px] font-bold bg-[#e0edfd] text-[#1d68bd] rounded border border-[#bfdbfe]">
-                    स्वास्थ्य
+                  <span className="hidden sm:inline-block px-1.5 py-0.5 text-[9px] font-bold bg-[#e0edfd] text-[#1d68bd] rounded border border-[#bfdbfe]">
+                    PS 26133
                   </span>
                 </div>
-                <span className="text-[9px] sm:text-[10px] font-semibold text-slate-500 uppercase tracking-tight leading-tight truncate mt-0.5">
-                  RURAL HEALTH ACCESS & CARE NAVIGATOR · PS 26133
+                <span className="hidden md:inline-block text-[9px] font-semibold text-slate-400 uppercase tracking-tight leading-tight truncate mt-0.5">
+                  RURAL HEALTH ACCESS & CARE NAVIGATOR
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Right Group: Online Indicator, Search, GPS, Notifications & Profile */}
-          <div className="flex items-center gap-2.5 shrink-0">
-            {/* Live ONLINE Status Pill (Matching Reference Screenshot) */}
-            <div className="hidden lg:flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/80">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="tracking-wide text-[11px]">ONLINE</span>
-            </div>
-
-            {/* Global Search Bar */}
-            <div className="hidden md:flex items-center gap-1.5 w-80 lg:w-96 min-w-[320px]">
-              <div className="relative flex-1">
-                <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="11" cy="11" r="7" />
-                    <line x1="21" y1="2" x2="16.65" y2="16.65" />
-                  </svg>
-                </span>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={t('searchBarPlaceholder')}
-                  className="w-full pl-8 pr-7 py-1.5 rounded-lg border border-slate-300 text-xs focus:outline-none focus:border-[#1d68bd] focus:ring-1 focus:ring-[#1d68bd] bg-white"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute inset-y-0 right-0 pr-2 flex items-center text-xs text-slate-400 hover:text-slate-600 cursor-pointer"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => triggerLiveDiscovery(searchRadius / 1000)}
-                className="px-2.5 py-1.5 bg-[#1d68bd] hover:bg-[#15529a] text-white font-bold text-xs rounded-lg shadow-2xs transition flex items-center gap-1 cursor-pointer shrink-0"
-              >
-                {isLocating ? (
-                  <svg className="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                  </svg>
-                ) : (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="11" cy="11" r="7" />
-                    <line x1="21" y1="2" x2="16.65" y2="16.65" />
-                  </svg>
-                )}
-                <span className="hidden xl:inline">Search</span>
-              </button>
+          {/* Center Group: Global Search Bar & Live GPS Pill */}
+          <div className="hidden lg:flex items-center gap-2.5 flex-1 max-w-xl mx-2">
+            <div className="relative flex-1">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="7" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+              </span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t('searchBarPlaceholder')}
+                className="w-full pl-9 pr-8 py-2 rounded-xl border border-slate-200/90 text-xs focus:outline-none focus:border-[#1d68bd] focus:ring-2 focus:ring-[#1d68bd]/15 bg-slate-50/70 focus:bg-white transition"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-xs text-slate-400 hover:text-slate-600 cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
             </div>
 
             {/* Live GPS Status Pill */}
             <button
               onClick={() => triggerLiveDiscovery(searchRadius / 1000)}
               disabled={isLocating}
-              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-bold transition shadow-2xs bg-[#e0edfd] text-[#1d68bd] border-[#bfdbfe] hover:bg-[#d0e5fb] cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition bg-[#f0f7ff] text-[#1d68bd] border-[#bfdbfe] hover:bg-[#e0edfd] cursor-pointer shrink-0 shadow-2xs"
               title="Refresh Live GPS Coordinates"
             >
               {isLocating ? (
-                <svg className="animate-spin w-3 h-3 text-[#1d68bd]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <svg className="animate-spin w-3.5 h-3.5 text-[#1d68bd]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
               ) : (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               )}
-              <span className="text-[11px]">
+              <span className="text-[11px] whitespace-nowrap">
                 {isLocating ? 'Locating...' : (userLocation ? `${userLocation.lat.toFixed(2)}°, ${userLocation.lng.toFixed(2)}°` : 'Locate')}
               </span>
             </button>
+          </div>
+
+          {/* Right Group: Language, Font Sizers, SOS, Notifications & Profile */}
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            {/* Language Dropdown */}
+            <div className="relative flex items-center gap-1 px-2 py-1.5 rounded-xl border border-slate-200 bg-white text-[11px] font-semibold text-slate-700 shadow-2xs">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10z"/>
+              </svg>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="bg-transparent text-slate-700 font-semibold focus:outline-none cursor-pointer pr-1"
+              >
+                <option value="English">EN</option>
+                <option value="Hindi">हिंदी</option>
+                <option value="Marathi">मराठी</option>
+                <option value="Telugu">తెలుగు</option>
+              </select>
+            </div>
+
+            {/* Accessibility Font Sizers (A- / A / A+) */}
+            <div className="hidden xl:flex items-center rounded-xl border border-slate-200 bg-white text-[11px] font-bold overflow-hidden shadow-2xs">
+              <button 
+                type="button" 
+                onClick={() => {
+                  setFontSizeLevel((prev) => Math.max(85, prev - 10));
+                  showToast('Display text size: Reduced (A-)', 'info');
+                }} 
+                className={`px-2 py-1 border-r border-slate-200 transition cursor-pointer ${
+                  fontSizeLevel < 100 ? 'bg-[#1d68bd] text-white font-black' : 'text-slate-600 hover:bg-slate-100'
+                }`}
+                title="Decrease font size"
+              >
+                A-
+              </button>
+              <button 
+                type="button" 
+                onClick={() => {
+                  setFontSizeLevel(100);
+                  showToast('Display text size: Standard (A)', 'info');
+                }} 
+                className={`px-2 py-1 transition cursor-pointer ${
+                  fontSizeLevel === 100 ? 'bg-[#1d68bd] text-white font-black' : 'text-slate-600 hover:bg-slate-100'
+                }`} 
+                title="Default font size"
+              >
+                A
+              </button>
+              <button 
+                type="button" 
+                onClick={() => {
+                  setFontSizeLevel((prev) => Math.min(125, prev + 10));
+                  showToast('Display text size: Enlarged (A+)', 'info');
+                }} 
+                className={`px-2 py-1 border-l border-slate-200 transition cursor-pointer ${
+                  fontSizeLevel > 100 ? 'bg-[#1d68bd] text-white font-black' : 'text-slate-600 hover:bg-slate-100'
+                }`} 
+                title="Increase font size"
+              >
+                A+
+              </button>
+            </div>
 
             {/* Golden Hour Bystander SOS Trigger Button */}
             <button
               onClick={() => setShowSosModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-black transition shadow-sm bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white border-rose-700 cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-black transition shadow-sm bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white border-rose-700 cursor-pointer active:scale-98"
               title="Broadcast Emergency Golden Hour SOS Beacon"
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse">
@@ -1512,7 +1463,7 @@ export default function App() {
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="w-8 h-8 rounded-lg border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-700 cursor-pointer relative"
+                className="w-9 h-9 rounded-xl border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-700 cursor-pointer relative"
                 title="Live Facility Alerts"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -1524,7 +1475,7 @@ export default function App() {
                 </span>
               </button>
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-xl border border-slate-200 p-3 z-50 text-xs space-y-2 animate-in fade-in duration-150">
+                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-xl border border-slate-200 p-3.5 z-50 text-xs space-y-2 animate-in fade-in duration-150">
                   <div className="flex items-center justify-between pb-2 border-b border-slate-100 font-bold text-slate-800">
                     <span>Live Clinical Alerts</span>
                     <button onClick={() => setShowNotifications(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">✕</button>
@@ -1544,28 +1495,21 @@ export default function App() {
             {/* Profile / Role Badge */}
             <div
               onClick={() => setShowAuthModal(true)}
-              className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg border text-xs font-bold cursor-pointer transition shadow-2xs ${
-                isAdmin
-                  ? 'bg-amber-50 text-amber-900 border-amber-300 ring-1 ring-amber-400/20'
-                  : currentUser.phone
-                  ? 'bg-[#e0edfd] text-[#0284c7] border-[#bae6fd]'
-                  : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
-              }`}
-              title="Switch Role or Manage Profile"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 cursor-pointer transition shadow-2xs shrink-0"
+              title="Click to Switch Role or Sign Out"
             >
-              <span className={`w-2 h-2 rounded-full ${isAdmin ? 'bg-amber-500' : 'bg-[#0284c7]'} animate-pulse`}></span>
-              <span className="hidden sm:inline truncate max-w-[100px] lg:max-w-[130px]">
-                {isAdmin
-                  ? 'Dr. S. K. Verma'
-                  : currentUser.phone
-                  ? currentUser.fullName || currentUser.name
-                  : 'Guest Patient'}
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+              <span className="text-xs font-bold truncate max-w-[90px] sm:max-w-[120px]">
+                {currentUser?.name?.split(' ')[0] || 'Guest'}
               </span>
-              <span className="text-[10px] opacity-70">▾</span>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
             </div>
           </div>
         </div>
       </header>
+
 
       {/* 3-Column Master Container (Sitting Directly Below Top Header) */}
       <div className={`layout-3col-container ${!isAiOpen || activeTab === 'ai-assistant' ? 'right-closed' : ''}`}>
@@ -1793,51 +1737,123 @@ export default function App() {
             {/* ========================================================= */}
             {activeTab === 'dashboard' && (
               <div className="space-y-6">
+                {/* Hero Greeting & Locality Status Banner */}
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 p-6 text-white shadow-sm">
+                  {/* Subtle Background Radial Highlights */}
+                  <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-blue-500/10 blur-3xl pointer-events-none"></div>
+                  <div className="absolute bottom-0 left-1/3 -mb-16 w-48 h-48 rounded-full bg-emerald-500/10 blur-2xl pointer-events-none"></div>
+
+                  <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="space-y-1.5">
+                      <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/15 text-[11px] font-medium text-slate-200">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>
+                          {userLocation
+                            ? `GPS Active: ${userLocation.lat.toFixed(2)}°N, ${userLocation.lng.toFixed(2)}°E`
+                            : 'Detecting local PHC coverage...'}
+                        </span>
+                      </div>
+                      <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                        Welcome back, {currentUser?.name?.split(' ')[0] || 'Citizen'}
+                      </h1>
+                      <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
+                        Real-time rural healthcare grid: instant facility discovery, live medicine inventory, and emergency tele-triage dispatch.
+                      </p>
+                    </div>
+
+                    {/* Quick Stats Cluster */}
+                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0 pt-2 md:pt-0">
+                      <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                        <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-300 flex items-center justify-center font-bold text-xs">
+                          {facilities?.length || 0}
+                        </div>
+                        <div>
+                          <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Centers</div>
+                          <div className="text-xs font-bold text-white">Verified</div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-xs">
+                          24/7
+                        </div>
+                        <div>
+                          <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Triage</div>
+                          <div className="text-xs font-bold text-white">Active</div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => setShowSosModal(true)}
+                        className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-600/90 hover:bg-rose-600 text-white text-xs font-bold transition cursor-pointer shadow-sm border border-rose-500/50"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse">
+                          <circle cx="12" cy="12" r="2"/>
+                          <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/>
+                        </svg>
+                        <span>SOS Beacon</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 {/* 1. Top 4 Quick-Action Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-                  <div onClick={() => navigateToTab('facilities')} className="quick-action-card">
-                    <div className="w-11 h-11 rounded-2xl bg-[#e0edfd] border border-[#bfdbfe] flex items-center justify-center text-[#1d68bd] shrink-0">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div
+                    onClick={() => navigateToTab('facilities')}
+                    className="quick-action-card group hover:border-sky-200"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 shrink-0 group-hover:bg-sky-100 group-hover:scale-105 transition">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="11" cy="11" r="7" />
                         <line x1="21" y1="21" x2="16.65" y2="16.65" />
                       </svg>
                     </div>
-                    <div>
-                      <h3 className="text-xs font-bold text-slate-900">{t('findNearbyHealthcare')}</h3>
-                      <p className="text-[11px] text-slate-500 mt-0.5">{t('findNearbyHealthcareDesc')}</p>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-bold text-slate-900 group-hover:text-sky-700 transition">{t('findNearbyHealthcare')}</h3>
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-2">{t('findNearbyHealthcareDesc')}</p>
                     </div>
                   </div>
 
-                  <div onClick={() => navigateToTab('medicines')} className="quick-action-card">
-                    <div className="w-11 h-11 rounded-2xl bg-[#f0f7ff] border border-[#bfdbfe] flex items-center justify-center text-[#1d68bd] shrink-0">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <div
+                    onClick={() => navigateToTab('medicines')}
+                    className="quick-action-card group hover:border-emerald-200"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0 group-hover:bg-emerald-100 group-hover:scale-105 transition">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                         <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" />
                         <line x1="8.5" y1="8.5" x2="15.5" y2="15.5" />
                       </svg>
                     </div>
-                    <div>
-                      <h3 className="text-xs font-bold text-slate-900">{t('checkMedicineStock')}</h3>
-                      <p className="text-[11px] text-slate-500 mt-0.5">{t('checkMedicineStockDesc')}</p>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition">{t('checkMedicineStock')}</h3>
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-2">{t('checkMedicineStockDesc')}</p>
                     </div>
                   </div>
 
-                  <div onClick={() => setIsAiOpen(true)} className="quick-action-card">
-                    <div className="w-11 h-11 rounded-2xl bg-[#f0f7ff] border border-[#bfdbfe] flex items-center justify-center text-[#1d68bd] shrink-0">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <div
+                    onClick={() => setIsAiOpen(true)}
+                    className="quick-action-card group hover:border-indigo-200"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0 group-hover:bg-indigo-100 group-hover:scale-105 transition">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="4" y="4" width="16" height="16" rx="2" />
                         <rect x="9" y="9" width="6" height="6" />
                         <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3" />
                       </svg>
                     </div>
-                    <div>
-                      <h3 className="text-xs font-bold text-slate-900">{t('healthAiAssistant')}</h3>
-                      <p className="text-[11px] text-slate-500 mt-0.5">{t('healthAiAssistantDesc')}</p>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition">{t('healthAiAssistant')}</h3>
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-2">{t('healthAiAssistantDesc')}</p>
                     </div>
                   </div>
 
-                  <div onClick={() => navigateToTab('appointments')} className="quick-action-card">
-                    <div className="w-11 h-11 rounded-2xl bg-[#f0f7ff] border border-[#bfdbfe] flex items-center justify-center text-[#1d68bd] shrink-0">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <div
+                    onClick={() => navigateToTab('appointments')}
+                    className="quick-action-card group hover:border-amber-200"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0 group-hover:bg-amber-100 group-hover:scale-105 transition">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                         <line x1="16" y1="2" x2="16" y2="6" />
                         <line x1="8" y1="2" x2="8" y2="6" />
@@ -1845,9 +1861,9 @@ export default function App() {
                         <path d="m9 16 2 2 4-4" />
                       </svg>
                     </div>
-                    <div>
-                      <h3 className="text-xs font-bold text-slate-900">{t('bookOpdPasses')}</h3>
-                      <p className="text-[11px] text-slate-500 mt-0.5">{t('bookOpdPassesDesc')}</p>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-bold text-slate-900 group-hover:text-amber-700 transition">{t('bookOpdPasses')}</h3>
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-2">{t('bookOpdPassesDesc')}</p>
                     </div>
                   </div>
                 </div>
