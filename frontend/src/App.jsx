@@ -229,6 +229,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [activeFilterTags, setActiveFilterTags] = useState([]);
+  const [capabilityFilter, setCapabilityFilter] = useState('all'); // 'all' | 'asv' | 'emergency' | 'maternal' | 'free_opd'
   const [selectedMedCategory, setSelectedMedCategory] = useState('All');
 
   // 6. Appointments & Referral System State
@@ -380,7 +381,7 @@ export default function App() {
       abhaId: '91-4829-1049-3820',
       village: 'Baramati Rural Sector 4',
       condition: 'Severe Anemia (Hb 7.8 g/dL) + Gestational Hypertension',
-      assignedWorker: 'ASHA Worker Rekha Tai',
+      assignedWorker: 'Care Coordinator Rekha Tai',
       dueDate: 'Tomorrow (ANC Visit 3)',
       urgency: 'High Priority',
       actionTaken: 'Iron Sucrose Infusion Scheduled at PHC'
@@ -698,7 +699,22 @@ export default function App() {
         return true;
       });
 
-    return matchQuery && matchDistrict && matchTags;
+    const matchCapability =
+      capabilityFilter === 'all' ||
+      (capabilityFilter === 'asv' && (
+        (f.medicineStock || []).some((m) => m.name.toLowerCase().includes('venom') || m.name.toLowerCase().includes('asv')) ||
+        (f.name || '').toLowerCase().includes('hospital') || (f.name || '').toLowerCase().includes('chc')
+      )) ||
+      (capabilityFilter === 'emergency' && ((f.emergencyBeds || 0) >= 4 || (f.type || '').includes('HOSPITAL'))) ||
+      (capabilityFilter === 'maternal' && (
+        (f.doctorSpecializations || []).some((s) => s.toLowerCase().includes('gynec') || s.toLowerCase().includes('obstetric')) ||
+        (f.specialties || []).some((s) => s.toLowerCase().includes('maternal'))
+      )) ||
+      (capabilityFilter === 'free_opd' && (
+        (f.type || '').includes('PRIMARY') || (f.categoryLabel || '').includes('Primary')
+      ));
+
+    return matchQuery && matchDistrict && matchTags && matchCapability;
   });
 
   // Filtered medicines based on category
@@ -733,6 +749,7 @@ export default function App() {
     setBookingError(null);
     setBookingSuccessToken(null);
     setShowBookingModal(true);
+    showToast(`Selected ${t(dept.nameKey) || dept.name} (${day.label || 'Today'}). Ready to book token.`, 'info');
   };
 
   const handleConfirmBooking = async (e) => {
@@ -1723,15 +1740,15 @@ export default function App() {
                         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                         <span>
                           {userLocation
-                            ? `GPS Active: ${userLocation.lat.toFixed(2)}°N, ${userLocation.lng.toFixed(2)}°E`
-                            : 'Detecting local PHC coverage...'}
+                            ? `${t('gpsActivePrefix')}: ${userLocation.lat.toFixed(2)}°N, ${userLocation.lng.toFixed(2)}°E`
+                            : t('detectingCoverage')}
                         </span>
                       </div>
                       <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-                        Welcome back, {currentUser?.name?.split(' ')[0] || 'Citizen'}
+                        {t('welcomeBackPrefix')} {currentUser?.name?.split(' ')[0] || 'Citizen'}
                       </h1>
                       <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
-                        Real-time rural healthcare grid: instant facility discovery, live medicine inventory, and emergency tele-triage dispatch.
+                        {t('heroSubtitle')}
                       </p>
                     </div>
 
@@ -1742,8 +1759,8 @@ export default function App() {
                           {facilities?.length || 0}
                         </div>
                         <div>
-                          <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Centers</div>
-                          <div className="text-xs font-bold text-white">Verified</div>
+                          <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">{t('centersLabel')}</div>
+                          <div className="text-xs font-bold text-white">{t('centersVerified')}</div>
                         </div>
                       </div>
 
@@ -1752,8 +1769,8 @@ export default function App() {
                           24/7
                         </div>
                         <div>
-                          <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Triage</div>
-                          <div className="text-xs font-bold text-white">Active</div>
+                          <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">{t('triageLabel')}</div>
+                          <div className="text-xs font-bold text-white">{t('triageActive')}</div>
                         </div>
                       </div>
 
@@ -2070,11 +2087,21 @@ export default function App() {
                               </div>
                             </div>
 
-                            <div className="text-[11px] text-slate-600 bg-slate-50/80 p-2 rounded-xl border border-slate-100 flex items-center justify-between">
-                              <span className="truncate">{t('specialtiesLabel')}: {(clinic.doctorSpecializations || ['General OPD']).join(', ')}</span>
-                              <span className="text-[10px] font-bold text-slate-500 shrink-0 ml-2">
-                                {clinic.emergencyBeds || 4} {t('bedsLabel')}
-                              </span>
+                            <div className="space-y-1.5 bg-slate-50/80 p-2.5 rounded-xl border border-slate-100">
+                              <div className="flex items-center justify-between text-[11px] text-slate-600">
+                                <span className="truncate font-medium">{t('specialtiesLabel')}: {(clinic.doctorSpecializations || ['General OPD']).join(', ')}</span>
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 shrink-0 ml-2">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                  <span>{clinic.emergencyBeds || 4} {t('bedsLabel')} Ready</span>
+                                </span>
+                              </div>
+                              {/* Capacity visual micro-gauge */}
+                              <div className="w-full bg-slate-200/80 rounded-full h-1.5 overflow-hidden">
+                                <div
+                                  className="bg-gradient-to-r from-emerald-500 to-teal-400 h-1.5 rounded-full transition-all duration-500"
+                                  style={{ width: `${Math.min(100, Math.max(25, ((clinic.emergencyBeds || 4) / 10) * 100))}%` }}
+                                ></div>
+                              </div>
                             </div>
 
                             <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
@@ -2274,9 +2301,35 @@ export default function App() {
                           <circle cx="12" cy="10" r="3" />
                         </svg>
                       )}
-                      <span>Refresh GPS</span>
+                      <span>{isLocating ? t('locating') : t('locateMeBtn')}</span>
                     </button>
                   </div>
+                </div>
+
+                {/* 1-Click Critical Triage Capability Filter Chips */}
+                <div className="clinical-card p-3 flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">
+                    Quick Triage:
+                  </span>
+                  {[
+                    { id: 'all', label: t('filterAll') },
+                    { id: 'asv', label: t('filterAsvStocked') },
+                    { id: 'emergency', label: t('filterEmergency24x7') },
+                    { id: 'maternal', label: t('filterLaborWard') },
+                    { id: 'free_opd', label: t('filterGovtFree') }
+                  ].map((chip) => (
+                    <button
+                      key={chip.id}
+                      onClick={() => setCapabilityFilter(chip.id)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer border ${
+                        capabilityFilter === chip.id
+                          ? 'bg-[#1d68bd] text-white border-[#1d68bd] shadow-xs'
+                          : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                      }`}
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
                 </div>
 
                 {/* View 1: Card Grid */}
@@ -2370,9 +2423,21 @@ export default function App() {
                               </div>
                             </div>
 
-                            <div className="text-[11px] text-slate-600 bg-slate-50/80 p-2 rounded-xl border border-slate-100 space-y-1">
-                              <div className="truncate">{t('specialtiesLabel')}: {(clinic.doctorSpecializations || ['General OPD']).join(', ')}</div>
-                              <div className="flex items-center justify-between text-[10px] text-slate-500 font-semibold">
+                            <div className="text-[11px] text-slate-600 bg-slate-50/80 p-2.5 rounded-xl border border-slate-100 space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <div className="truncate font-medium">{t('specialtiesLabel')}: {(clinic.doctorSpecializations || ['General OPD']).join(', ')}</div>
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 shrink-0 ml-2">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                  <span>{clinic.emergencyBeds || 4} {t('bedsLabel')} Ready</span>
+                                </span>
+                              </div>
+                              <div className="w-full bg-slate-200/80 rounded-full h-1.5 overflow-hidden">
+                                <div
+                                  className="bg-gradient-to-r from-emerald-500 to-teal-400 h-1.5 rounded-full transition-all duration-500"
+                                  style={{ width: `${Math.min(100, Math.max(25, ((clinic.emergencyBeds || 4) / 10) * 100))}%` }}
+                                ></div>
+                              </div>
+                              <div className="flex items-center justify-between text-[10px] text-slate-500 font-semibold pt-0.5">
                                 <span className="flex items-center gap-1">
                                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <circle cx="12" cy="12" r="10" />
@@ -2380,7 +2445,7 @@ export default function App() {
                                   </svg>
                                   {clinic.operatingHours || '08:30 AM - 02:00 PM'}
                                 </span>
-                                <span>{clinic.emergencyBeds || 4} {t('bedsLabel')}</span>
+                                <span className="text-slate-400">ABDM Sync: Live</span>
                               </div>
                             </div>
                           </div>
@@ -2834,7 +2899,7 @@ export default function App() {
                         <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Stage 1: Sub-Centre</span>
                         <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">✓</span>
                       </div>
-                      <div className="font-bold text-slate-800 text-xs">ASHA Triage & Vitals</div>
+                      <div className="font-bold text-slate-800 text-xs">Primary Triage & Vitals</div>
                       <div className="text-[10px] text-slate-500">BP 150/95 · Initial slip logged</div>
                       <div className="text-[9px] text-slate-400 font-mono">08:15 AM · Completed</div>
                     </div>
@@ -2883,7 +2948,7 @@ export default function App() {
                           High-Risk Patient Care & Follow-Up Registry
                         </h3>
                         <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold border border-rose-200">
-                          Frontline ASHA & ANM Console
+                          Frontline Primary Care & ANM Console
                         </span>
                       </div>
                       <p className="text-[11px] text-slate-500 mt-0.5">
@@ -3171,7 +3236,7 @@ export default function App() {
                         <span className="text-[10px] text-emerald-700 font-mono">100% Online Sync</span>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-600">
-                        <div className="p-2 bg-slate-50 rounded-lg"><strong>14</strong> Sub-Centres (ASHA)</div>
+                        <div className="p-2 bg-slate-50 rounded-lg"><strong>14</strong> Primary Sub-Centres</div>
                         <div className="p-2 bg-slate-50 rounded-lg"><strong>5</strong> Primary Health (PHC)</div>
                         <div className="p-2 bg-slate-50 rounded-lg"><strong>2</strong> Community Health (CHC)</div>
                         <div className="p-2 bg-slate-50 rounded-lg"><strong>1</strong> Civil Hospital (SDH)</div>
@@ -4700,7 +4765,7 @@ export default function App() {
                       Our Mission
                     </h5>
                     <p className="text-slate-700 leading-relaxed text-xs">
-                      To bridge the last-mile rural healthcare divide across Maharashtra by unifying live hospital discovery, real-time medicine and Anti-Snake Venom (ASV) inventory tracking, and grounded RAG AI medical triage for community health workers (ASHAs/ANMs) and citizens.
+                      To bridge the last-mile rural healthcare divide across Maharashtra by unifying live hospital discovery, real-time medicine and Anti-Snake Venom (ASV) inventory tracking, and grounded RAG AI medical triage for field health coordinators and citizens.
                     </p>
                   </div>
 

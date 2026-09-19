@@ -8,7 +8,7 @@
 ---
 
 ## 📌 1. Project Overview & Mission
-Swasthya Sangam is an enterprise-grade rural health grid portal designed for village citizens, ASHA workers, and healthcare administrators. It solves critical rural healthcare accessibility challenges by providing:
+Swasthya Sangam is an enterprise-grade rural health grid portal designed for village citizens, field healthcare staff, and healthcare administrators. It solves critical rural healthcare accessibility challenges by providing:
 - **Instant Facility Discovery**: Live GPS-based radius discovery of Primary Health Centres (PHCs), Community Health Centres (CHCs), and Sub-Centres using Humanitarian OpenStreetMap (OSM HOT).
 - **Essential Medicine Inventory**: Real-time stock tracking for critical rural drugs (anti-venom, ORS, maternal supplements, antibiotics).
 - **Golden Hour Bystander SOS Beacon**: Instant emergency broadcast with live GPS coordinates, ambulance dispatch (108), and maternal helpline (102).
