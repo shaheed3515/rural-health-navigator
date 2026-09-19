@@ -1626,33 +1626,7 @@ export default function App() {
               </button>
             ))}
 
-            {/* Quick Slide-Over Drawer Toggle in Sidebar */}
-            <button
-              onClick={() => {
-                if (activeTab === 'ai-assistant') {
-                  navigateToTab('dashboard');
-                }
-                setIsAiOpen(!isAiOpen);
-                setMobileSidebarOpen(false);
-              }}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition text-left cursor-pointer border ${
-                isAiOpen && activeTab !== 'ai-assistant'
-                  ? 'bg-[#e0edfd] text-[#1d68bd] font-bold border-[#bfdbfe]'
-                  : 'text-[#475569] hover:bg-slate-50 hover:text-slate-900 border-transparent'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <span className="shrink-0 flex items-center justify-center">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  </svg>
-                </span>
-                <span>Slide-over Drawer</span>
-              </div>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-white border border-[#bfdbfe] font-bold text-[#1d68bd]">
-                {isAiOpen && activeTab !== 'ai-assistant' ? 'Open' : 'Hidden'}
-              </span>
-            </button>
+
           </nav>
 
           {/* Bottom Sidebar Emergency Card */}
