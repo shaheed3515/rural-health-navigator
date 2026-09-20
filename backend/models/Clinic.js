@@ -26,7 +26,7 @@ const clinicSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['PHC', 'CHC'],
+    enum: ['PHC', 'CHC', 'Sub-Centre', 'Dental Clinic', 'Govt Dental Hospital', 'Hospital'],
     default: 'PHC',
   },
   district: {

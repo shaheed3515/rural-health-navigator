@@ -251,3 +251,139 @@ export const fetchOverpassHospitals = (lat, lng, radiusMeters = 20000) => {
   return fetchRealHospitals(lat, lng, radiusMeters / 1000);
 };
 
+// ============================================================================
+// OFFLINE & PWA CAPABILITIES (SIH Demo Requirements)
+// ============================================================================
+const OFFLINE_QUEUE_KEY = "health_offline_sync_queue";
+const CACHED_FACILITIES_KEY = "health_cached_facilities";
+const CACHED_APPOINTMENTS_KEY = "health_cached_appointments";
+
+export function getOfflineQueue() {
+  try {
+    const raw = localStorage.getItem(OFFLINE_QUEUE_KEY);
+    return raw ? JSON.parse(raw) : { appointments: [], registrations: [] };
+  } catch {
+    return { appointments: [], registrations: [] };
+  }
+}
+
+export function saveOfflineAppointment(appointment) {
+  try {
+    const queue = getOfflineQueue();
+    const aptWithPending = {
+      ...appointment,
+      status: "Pending Sync",
+      isOfflinePending: true,
+      savedAt: new Date().toISOString()
+    };
+    queue.appointments.unshift(aptWithPending);
+    localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
+
+    // Also update cached appointments so UI displays it immediately
+    const cachedApts = getCachedAppointments();
+    localStorage.setItem(CACHED_APPOINTMENTS_KEY, JSON.stringify([aptWithPending, ...cachedApts.filter(a => a.tokenId !== aptWithPending.tokenId)]));
+
+    return aptWithPending;
+  } catch (err) {
+    console.error("Failed to save offline appointment:", err);
+    return appointment;
+  }
+}
+
+export function saveOfflineRegistration(patientData) {
+  try {
+    const queue = getOfflineQueue();
+    queue.registrations.push({
+      ...patientData,
+      savedAt: new Date().toISOString()
+    });
+    localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
+
+    // Set as stored user locally
+    const localUser = {
+      id: `offline-patient-${Date.now()}`,
+      fullName: patientData.fullName,
+      phone: patientData.phone,
+      district: patientData.district || "Rural Maharashtra",
+      preferredLanguage: patientData.preferredLanguage || "English",
+      role: "patient",
+      isOfflineProfile: true
+    };
+    setStoredAuth(`offline-token-${Date.now()}`, localUser);
+    return localUser;
+  } catch (err) {
+    console.error("Failed to save offline registration:", err);
+    return null;
+  }
+}
+
+export function cacheFacilitiesLocally(facilitiesList) {
+  try {
+    if (Array.isArray(facilitiesList) && facilitiesList.length > 0) {
+      localStorage.setItem(CACHED_FACILITIES_KEY, JSON.stringify(facilitiesList));
+    }
+  } catch (e) {
+    console.warn("Could not cache facilities locally:", e);
+  }
+}
+
+export function getCachedFacilities() {
+  try {
+    const raw = localStorage.getItem(CACHED_FACILITIES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function cacheAppointmentsLocally(appointmentsList) {
+  try {
+    if (Array.isArray(appointmentsList)) {
+      localStorage.setItem(CACHED_APPOINTMENTS_KEY, JSON.stringify(appointmentsList));
+    }
+  } catch (e) {
+    console.warn("Could not cache appointments locally:", e);
+  }
+}
+
+export function getCachedAppointments() {
+  try {
+    const raw = localStorage.getItem(CACHED_APPOINTMENTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function syncOfflineData() {
+  const queue = getOfflineQueue();
+  if (queue.appointments.length === 0 && queue.registrations.length === 0) {
+    return { success: true, count: 0, message: "No offline pending items." };
+  }
+
+  try {
+    const res = await apiFetch("/api/sync/offline", {
+      method: "POST",
+      body: queue
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      // Clear processed items
+      localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify({ appointments: [], registrations: [] }));
+
+      // Update cached appointments to Confirmed status
+      const cached = getCachedAppointments();
+      const updated = cached.map(a => a.status === "Pending Sync" ? { ...a, status: "Confirmed", isOfflinePending: false } : a);
+      localStorage.setItem(CACHED_APPOINTMENTS_KEY, JSON.stringify(updated));
+
+      return { success: true, count: (data.syncedAppointments || 0) + (data.syncedRegistrations || 0), ...data };
+    }
+  } catch (err) {
+    console.warn("[Sync Offline] Backend currently unreachable:", err);
+  }
+
+  return { success: false, error: "Network currently unavailable. Items remain in offline queue." };
+}
+
+

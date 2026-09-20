@@ -4,6 +4,19 @@ import LiveCameraModal from './components/LiveCameraModal';
 import DoctorRosterModal from './components/DoctorRosterModal';
 import SosBeaconModal from './components/SosBeaconModal';
 import VoiceCallModal from './components/VoiceCallModal';
+import DentalTriageCard from './components/DentalTriageCard';
+import { OfflineBanner, DashboardOfflineWidget } from './components/OfflineBanner';
+import { performOfflineTriage } from './services/offlineTriage';
+import { processAutomaticSync } from './services/syncEngine';
+import {
+  cacheFacilitiesInDB,
+  getCachedFacilitiesFromDB,
+  savePendingRegistrationDB,
+  savePendingAppointmentDB,
+  savePendingReferralDB,
+  getPendingItemsDB,
+  getLastSyncTime
+} from './services/offlineStorage';
 import { getTranslation } from './translations';
 import './App.css';
 import {
@@ -16,7 +29,15 @@ import {
   fetchOverpassHospitals,
   getDistanceKm,
   clearStoredAuth,
-  getStoredUser
+  getStoredUser,
+  saveOfflineAppointment,
+  saveOfflineRegistration,
+  cacheFacilitiesLocally,
+  getCachedFacilities,
+  cacheAppointmentsLocally,
+  getCachedAppointments,
+  syncOfflineData,
+  getOfflineQueue
 } from './api';
 
 // Helper: Get cached location or default to Andhra Pradesh regional hub (Anantapur)
@@ -232,6 +253,34 @@ export default function App() {
   const [loginError, setLoginError] = useState(null);
   const [loginLoading, setLoginLoading] = useState(false);
 
+  // Offline / PWA Grid & Sync State (SIH Demo)
+  const [isOnline, setIsOnline] = useState(() => typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [offlineQueueCount, setOfflineQueueCount] = useState(() => {
+    const q = getOfflineQueue();
+    return (q.appointments?.length || 0) + (q.registrations?.length || 0);
+  });
+  const [syncingOffline, setSyncingOffline] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState('Today, 10:42 AM');
+
+  const handleManualSync = async () => {
+    if (syncingOffline) return;
+    setSyncingOffline(true);
+    try {
+      const res = await processAutomaticSync();
+      await syncOfflineData();
+      const q = getOfflineQueue();
+      const count = (q.appointments?.length || 0) + (q.registrations?.length || 0);
+      setOfflineQueueCount(count);
+      const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      setLastSyncTime(`Today, ${nowStr}`);
+      showToast('Offline data synchronized with central health server', 'success');
+    } catch (err) {
+      showToast('Sync completed with warnings or offline server unreachable', 'info');
+    } finally {
+      setSyncingOffline(false);
+    }
+  };
+
   // 3. 100% Dynamic Real-Time Geolocation & Live OSM Discovery
   const [userLocation, setUserLocation] = useState(getInitialLocation);
   const [detectedCity, setDetectedCity] = useState('Anantapur');
@@ -430,6 +479,13 @@ export default function App() {
       name: 'AYUSH & Preventive Care',
       doctors: 'Vaidya Alok Tripathy (Ayush Incharge)',
       schedule: ['avail', 'avail', 'avail', 'limited', 'avail']
+    },
+    {
+      id: 'dental',
+      nameKey: 'deptDentalCare',
+      name: 'Dental Care',
+      doctors: 'Dr. Priya Shetty (Dental Surgeon)',
+      schedule: ['avail', 'limited', 'avail', 'avail', 'limited']
     }
   ];
 
@@ -442,7 +498,9 @@ export default function App() {
     { id: 5, name: 'Rabies Immunoglobulin (PEP)', category: 'Post-Exposure Prophylaxis', facility: 'District Trauma Depot', quantity: 16, status: 'Low Stock', threshold: 20 },
     { id: 6, name: 'Human Insulin Regular (Cold Chain)', category: 'Endocrine / Diabetes', facility: 'Cold-Chain Storage Unit', quantity: 75, status: 'In Stock', threshold: 25 },
     { id: 7, name: 'Normal Saline (IV 500ml)', category: 'Emergency / IV Fluids', facility: 'Emergency Trauma Hub', quantity: 320, status: 'In Stock', threshold: 50 },
-    { id: 8, name: 'Oxytocin Injection (Maternal Care)', category: 'Maternal Care', facility: 'Maternity Wing Store', quantity: 85, status: 'In Stock', threshold: 30 }
+    { id: 8, name: 'Oxytocin Injection (Maternal Care)', category: 'Maternal Care', facility: 'Maternity Wing Store', quantity: 85, status: 'In Stock', threshold: 30 },
+    { id: 9, name: 'Dental Analgesic & Clove Oil Kit', category: 'Dental Therapeutics', facility: 'Primary Dental OPD', quantity: 450, status: 'In Stock', threshold: 50 },
+    { id: 10, name: 'Chlorhexidine 0.2% Mouthwash', category: 'Dental / Antiseptic', facility: 'Community Dispensary', quantity: 280, status: 'In Stock', threshold: 40 }
   ]);
 
   // 9b. Diagnostic & Essential Lab Services Ledger (SIH Outcome Alignment)
@@ -507,6 +565,29 @@ export default function App() {
   // LIFECYCLE: 100% Dynamic Real-Time Discovery on Application Mount
   // ============================================================================
   useEffect(() => {
+    // 0. Instant offline hydration from local IndexedDB & cache
+    getLastSyncTime().then(t => {
+      if (t) setLastSyncTime(t);
+    });
+    getCachedFacilitiesFromDB().then((dbFacs) => {
+      if (dbFacs && dbFacs.length > 0) {
+        setFacilities(dbFacs);
+      } else {
+        const cachedFacs = getCachedFacilities();
+        if (cachedFacs && cachedFacs.length > 0) setFacilities(cachedFacs);
+      }
+    });
+
+    getPendingItemsDB().then((pending) => {
+      const totalCount = (pending.registrations?.length || 0) + (pending.appointments?.length || 0) + (pending.referrals?.length || 0);
+      setOfflineQueueCount(totalCount);
+    });
+
+    const cachedApts = getCachedAppointments();
+    if (cachedApts && cachedApts.length > 0) {
+      setMyAppointments(cachedApts);
+    }
+
     // 1. Check stored authentication
     verifyCurrentUser().then((user) => {
       if (user) {
@@ -526,6 +607,31 @@ export default function App() {
 
     // 3. Immediately trigger Real-Time Discovery anchored to user's active location
     triggerLiveDiscovery(20);
+
+    // 4. Offline / Online Event Listeners with Automatic Reusable Sync Engine (SIH Requirement)
+    const handleOnline = () => {
+      setIsOnline(true);
+      showToast('Online: Reconnected to Live Health Grid', 'success');
+      processAutomaticSync().then((res) => {
+        if (res && res.success && res.count > 0) {
+          showToast(`Synced ${res.count} offline items automatically with health server!`, 'success');
+          setOfflineQueueCount(0);
+          if (res.lastSyncTimestamp) setLastSyncTime(res.lastSyncTimestamp);
+          fetchAppointments();
+        }
+      });
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      showToast('Offline Mode: Using local clinical cache & pending queue', 'warning');
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
   // ============================================================================
@@ -856,6 +962,32 @@ export default function App() {
     }
 
     setBookingLoading(true);
+
+    if (!isOnline) {
+      const offlineApt = {
+        tokenId: `OFFLINE-OPD-${Math.floor(10000 + Math.random() * 90000)}`,
+        tokenNumber: Math.floor(12 + Math.random() * 30),
+        patientName: bookingPatientName.trim(),
+        phone: cleanPhone,
+        facilityId: bookingClinic?.id || 'osm-local',
+        facilityName: bookingClinic?.name || 'Local Community Health Centre',
+        department: bookingDept,
+        appointmentDate: bookingDate,
+        estimatedTime: '09:30 AM',
+        status: 'Pending Sync',
+        isOfflinePending: true,
+        savedAt: new Date().toISOString()
+      };
+      saveOfflineAppointment(offlineApt);
+      savePendingAppointmentDB(offlineApt);
+      setBookingSuccessToken(offlineApt);
+      setMyAppointments((prev) => [offlineApt, ...prev]);
+      setOfflineQueueCount((prev) => prev + 1);
+      showToast('Saved offline. This record will sync automatically when internet is restored.', 'info');
+      setBookingLoading(false);
+      return;
+    }
+
     try {
       const payload = {
         facilityId: bookingClinic?.id || 'osm-local',
@@ -881,7 +1013,7 @@ export default function App() {
         throw new Error(data.error || 'Booking registration failed');
       }
     } catch (err) {
-      // Fallback local token generation if backend is offline
+      // Fallback local pending token generation if backend is unreachable
       const mockToken = {
         tokenId: `SS-OPD-${Math.floor(10000 + Math.random() * 90000)}`,
         tokenNumber: Math.floor(12 + Math.random() * 30),
@@ -890,11 +1022,15 @@ export default function App() {
         department: bookingDept,
         appointmentDate: bookingDate,
         estimatedTime: '09:30 AM',
-        status: 'Confirmed'
+        status: 'Pending Sync',
+        isOfflinePending: true
       };
+      saveOfflineAppointment(mockToken);
+      savePendingAppointmentDB(mockToken);
       setBookingSuccessToken(mockToken);
       setMyAppointments((prev) => [mockToken, ...prev]);
-      showToast(`OPD Token ${mockToken.tokenId} Confirmed!`, 'success');
+      setOfflineQueueCount((prev) => prev + 1);
+      showToast(`Saved offline (Pending Sync). Will auto-sync when online.`, 'info');
     } finally {
       setBookingLoading(false);
     }
@@ -917,11 +1053,22 @@ export default function App() {
       department: referralForm.specialty,
       appointmentDate: new Date().toISOString().split('T')[0],
       estimatedTime: '10:00 AM Priority',
-      status: 'Referral Order Active'
+      status: isOnline ? 'Referral Order Active' : 'Pending Sync',
+      isOfflinePending: !isOnline,
+      reason: referralForm.reason
     };
+
+    if (!isOnline) {
+      saveOfflineAppointment(newRef);
+      savePendingReferralDB(newRef);
+      setOfflineQueueCount((prev) => prev + 1);
+      showToast('Referral saved offline (Pending Sync). Will auto-sync when online.', 'info');
+    } else {
+      showToast(`Referral order ${refToken} created.`, 'success');
+    }
+
     setMyAppointments((prev) => [newRef, ...prev]);
     setReferralSuccess(refToken);
-    showToast(`Referral order ${refToken} created.`, 'success');
   };
 
   // 11. Health AI Assistant Handlers
@@ -945,6 +1092,24 @@ export default function App() {
     setChatImageName('');
     if (fileInputRef.current) fileInputRef.current.value = '';
     setChatLoading(true);
+
+    if (!isOnline) {
+      // Offline Mode: DO NOT pretend Gemini AI works offline. Use local Rule-Based Triage Engine.
+      setTimeout(() => {
+        const offlineResult = performOfflineTriage(prompt, language);
+        const botMsg = {
+          id: Date.now() + 1,
+          sender: 'bot',
+          text: offlineResult.reply,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          isOfflineTriage: true,
+          categoryLabel: offlineResult.categoryLabel
+        };
+        setChatMessages((prev) => [...prev, botMsg]);
+        setChatLoading(false);
+      }, 300);
+      return;
+    }
 
     try {
       let currentFacilities = facilities || [];
@@ -1270,13 +1435,30 @@ export default function App() {
       return;
     }
 
+    const patientPayload = {
+      fullName: patientFormName.trim(),
+      phone: cleanPhone,
+      district: patientFormDistrict || 'Rural Sector',
+      preferredLanguage: language
+    };
+
+    if (!isOnline) {
+      const localUser = saveOfflineRegistration(patientPayload);
+      await savePendingRegistrationDB(patientPayload);
+      if (localUser) {
+        setCurrentUser(localUser);
+        setBookingPatientName(localUser.fullName);
+        setBookingPhone(localUser.phone);
+        setShowAuthModal(false);
+        setOfflineQueueCount((prev) => prev + 1);
+        showToast('Saved offline. This record will sync automatically when internet is restored.', 'info');
+      }
+      setLoginLoading(false);
+      return;
+    }
+
     try {
-      const data = await registerPatient({
-        fullName: patientFormName.trim(),
-        phone: cleanPhone,
-        district: patientFormDistrict,
-        preferredLanguage: language
-      });
+      const data = await registerPatient(patientPayload);
 
       if (data.success && data.user) {
         setCurrentUser(data.user);
@@ -1287,7 +1469,19 @@ export default function App() {
         showToast(`Welcome, ${data.user.fullName}!`, 'success');
       }
     } catch (err) {
-      setLoginError(err.message || 'Patient authentication failed.');
+      // Fallback to offline registration if server is down or unreachable
+      const localUser = saveOfflineRegistration(patientPayload);
+      await savePendingRegistrationDB(patientPayload);
+      if (localUser) {
+        setCurrentUser(localUser);
+        setBookingPatientName(localUser.fullName);
+        setBookingPhone(localUser.phone);
+        setShowAuthModal(false);
+        setOfflineQueueCount((prev) => prev + 1);
+        showToast('Saved offline (Pending Sync). Will sync when connectivity returns.', 'info');
+      } else {
+        setLoginError(err.message || 'Patient authentication failed.');
+      }
     } finally {
       setLoginLoading(false);
     }
@@ -1357,6 +1551,15 @@ export default function App() {
           <span>{subtleToast.message}</span>
         </div>
       )}
+
+      {/* Top Connectivity & Sync Indicator Banner */}
+      <OfflineBanner
+        isOnline={isOnline}
+        offlineQueueCount={offlineQueueCount}
+        lastSyncTime={lastSyncTime}
+        onSyncClick={handleManualSync}
+        syncing={syncingOffline}
+      />
 
       {/* Top 24x7 Emergency Header Ribbon */}
       <div className="emergency-ribbon">
@@ -2010,6 +2213,27 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* Dashboard Offline Sync & Grid Monitor */}
+                <DashboardOfflineWidget
+                  isOnline={isOnline}
+                  offlineQueueCount={offlineQueueCount}
+                  lastSyncTime={lastSyncTime}
+                  onSyncClick={handleManualSync}
+                  syncing={syncingOffline}
+                />
+
+                {/* Dental Healthcare Triage & First-Aid Desk */}
+                <DentalTriageCard
+                  t={t}
+                  onBookDental={() => navigateToTab('appointments')}
+                  onAskAI={(txt) => {
+                    setChatInput(txt);
+                    setIsAiOpen(true);
+                  }}
+                  onOpenSOS={() => setShowSosModal(true)}
+                  isOffline={!isOnline}
+                />
+
                 {/* 2. Dynamic Real-Time 5-Day Availability Matrix */}
                 <div className="clinical-card p-5 space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
@@ -2369,6 +2593,15 @@ export default function App() {
             {/* ========================================================= */}
             {activeTab === 'facilities' && (
               <div className="space-y-4">
+                {!isOnline && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 font-semibold flex items-center justify-between shadow-2xs">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                      <span>Showing last synchronized facility information from local health grid database.</span>
+                    </div>
+                    <span className="text-[10px] text-amber-700 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded font-mono">Offline GIS Cache</span>
+                  </div>
+                )}
                 {/* Control Bar: Radius filter, View Toggle, Refresh */}
                 <div className="clinical-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
@@ -2688,6 +2921,15 @@ export default function App() {
             {/* ========================================================= */}
             {activeTab === 'medicines' && (
               <div className="space-y-4">
+                {!isOnline && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 font-semibold flex items-center justify-between shadow-2xs">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                      <span>Showing last known drug availability. Inventory updates will re-sync when connection is restored.</span>
+                    </div>
+                    <span className="text-[10px] text-amber-700 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded font-mono">Offline Inventory</span>
+                  </div>
+                )}
                 <div className="clinical-card p-4 space-y-3">
                   {/* Top Sub-Tab Switcher: Medicines Depot vs Diagnostic & Lab Services */}
                   <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
@@ -3029,7 +3271,12 @@ export default function App() {
                             </div>
 
                             <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
-                              {isExpired ? (
+                              {apt.status === 'Pending Sync' || apt.syncStatus === 'pending' ? (
+                                <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                  Pending Offline Sync
+                                </span>
+                              ) : isExpired ? (
                                 <span className="bg-slate-100 text-slate-500 border border-slate-200 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
                                   <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
                                   Expired (Time Over)
@@ -5232,6 +5479,7 @@ export default function App() {
         userLocation={userLocation}
         onTriggerSos={() => setShowSosModal(true)}
         showToast={showToast}
+        isOnline={isOnline}
       />
     </div>
   );

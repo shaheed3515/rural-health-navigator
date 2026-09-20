@@ -6,7 +6,8 @@ export default function VoiceCallModal({
   language = 'English',
   userLocation,
   onTriggerSos,
-  showToast
+  showToast,
+  isOnline = true
 }) {
   const [callState, setCallState] = useState('dialing'); // 'dialing' | 'connected' | 'ended'
   const [callDuration, setCallDuration] = useState(0);

@@ -1,5 +1,129 @@
 [
   {
+    "id": "dental-centre-pune-01",
+    "name": "District Dental Care Centre & Oral Health Unit",
+    "type": "Dental Clinic",
+    "district": "Pune",
+    "block": "Civil Hospital Campus",
+    "address": "Opposite Civil Hospital Gate 2, Pune Rural Health Division, Maharashtra - 411001",
+    "coordinates": {
+      "lat": 18.5204,
+      "lng": 73.8567
+    },
+    "contact": {
+      "phone": "+91 98220 54321",
+      "emergencyHelpline": "108",
+      "ambulance": "+91 98220 54399"
+    },
+    "operatingHours": "Mon-Sat Dental OPD: 08:30 AM - 03:00 PM (Emergency 24x7)",
+    "emergencyBeds": 2,
+    "doctorSpecializations": [
+      "Dental Care",
+      "Oral & Maxillofacial Surgery",
+      "Pediatric Dentistry"
+    ],
+    "doctorsOnDuty": [
+      {
+        "id": "doc-dental-01",
+        "name": "Dr. Priya Shetty",
+        "qualification": "BDS, MDS (Conservative Dentistry & Endodontics)",
+        "specialization": "Dental Care",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "Dental OPD 1",
+        "tokensCount": 6,
+        "estimatedWaitMins": 15,
+        "timing": "08:30 AM - 02:30 PM",
+        "experienceYears": 9,
+        "languages": [
+          "English",
+          "Hindi",
+          "Marathi",
+          "Telugu"
+        ]
+      },
+      {
+        "id": "doc-dental-02",
+        "name": "Dr. Rohit Deshmukh",
+        "qualification": "BDS, MDS (Oral & Maxillofacial Surgery)",
+        "specialization": "Oral & Maxillofacial Surgery",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "Dental Minor OT 2",
+        "tokensCount": 3,
+        "estimatedWaitMins": 25,
+        "timing": "09:00 AM - 03:00 PM",
+        "experienceYears": 12,
+        "languages": [
+          "English",
+          "Hindi",
+          "Marathi"
+        ]
+      }
+    ],
+    "medicineStock": [
+      {
+        "name": "Dental Analgesic (Clove Oil & Ibuprofen)",
+        "category": "Dental Therapeutics",
+        "status": "In Stock",
+        "quantity": 600
+      },
+      {
+        "name": "Amoxicillin & Clavulanate 625mg",
+        "category": "Antibiotic",
+        "status": "In Stock",
+        "quantity": 420
+      },
+      {
+        "name": "Chlorhexidine Mouthwash (0.2%)",
+        "category": "Oral Antiseptic",
+        "status": "In Stock",
+        "quantity": 350
+      },
+      {
+        "name": "Dental Emergency Kit & Local Anesthesia",
+        "category": "Dental Emergency Kit",
+        "status": "In Stock",
+        "quantity": 180
+      }
+    ],
+    "doctorRoster": [
+      {
+        "id": "doc-dental-01",
+        "name": "Dr. Priya Shetty",
+        "qualification": "BDS, MDS (Conservative Dentistry & Endodontics)",
+        "specialization": "Dental Care",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "Dental OPD 1",
+        "tokensCount": 6,
+        "estimatedWaitMins": 15,
+        "timing": "08:30 AM - 02:30 PM",
+        "experienceYears": 9,
+        "languages": [
+          "English",
+          "Hindi",
+          "Marathi",
+          "Telugu"
+        ]
+      },
+      {
+        "id": "doc-dental-02",
+        "name": "Dr. Rohit Deshmukh",
+        "qualification": "BDS, MDS (Oral & Maxillofacial Surgery)",
+        "specialization": "Oral & Maxillofacial Surgery",
+        "dutyStatus": "ON_DUTY",
+        "roomNo": "Dental Minor OT 2",
+        "tokensCount": 3,
+        "estimatedWaitMins": 25,
+        "timing": "09:00 AM - 03:00 PM",
+        "experienceYears": 12,
+        "languages": [
+          "English",
+          "Hindi",
+          "Marathi"
+        ]
+      }
+    ]
+  },
+  {
     "id": "phc-baramati-01",
     "name": "Baramati Rural Primary Health Centre (PHC)",
     "type": "PHC",
@@ -20,7 +144,8 @@
     "doctorSpecializations": [
       "General Medicine",
       "Pediatrics",
-      "Ayush & Community Health"
+      "Ayush & Community Health",
+      "Dental Care"
     ],
     "doctorsOnDuty": [
       {

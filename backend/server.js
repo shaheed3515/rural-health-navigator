@@ -137,6 +137,50 @@ function generateGroundedFallbackResponse(userMessage, preferredLang = "English"
     }
   }
 
+  // ── DENTAL TRIAGE (non-diagnostic, safe language) ──────────────────────────
+  const isDentalEmergency = /severe.*swelling|facial.*swelling|swollen.*face|can't.*swallow|cannot.*swallow|difficulty.*swallow|difficulty.*breath|uncontrolled.*bleed|heavy.*bleed.*mouth|dental.*trauma|knocked.*out.*tooth|tooth.*knocked|jaw.*lock|lockjaw/i.test(q);
+  const isDentalUrgent = /dental.*abscess|abscess.*tooth|abscess.*gum|broken.*tooth|chipped.*tooth|loose.*tooth|tooth.*broken|tooth.*chipped|tooth.*loose|jaw.*pain|severe.*toothache|tooth.*severe/i.test(q);
+  const isDentalConsult = /toothache|tooth.*ache|tooth.*pain|tooth.*sensitive|tooth.*sensitivity|sensitive.*tooth|tooth.*decay|cavity|cavit|gum.*pain|pain.*gum|swollen.*gum|gum.*swell|bleed.*gum|gum.*bleed|mouth.*ulcer|ulcer.*mouth|दांत.*दर्द|दांत|दाँत|मसूड़े|పళ్ళ.*నొప్పి|పళ్ళు|చిగుళ్ళు|dental/i.test(q);
+
+  if (isDentalEmergency) {
+    if (detectedLang === "Hindi") {
+      return "🚨 **दंत आपातकाल:** यह एक गंभीर स्थिति हो सकती है। तुरंत **108 एम्बुलेंस** पर कॉल करें!\n\n• चेहरे की गंभीर सूजन, मुंह से अनियंत्रित रक्तस्राव, या सांस लेने में कठिनाई — ये सभी **आपातकालीन संकेत** हैं।\n• अपने नजदीकी Community Health Centre (CHC) या जिला अस्पताल जाएं।\n• **स्वयं दवा न लें।** पेशेवर दंत चिकित्सक से तुरंत मिलें।";
+    } else if (detectedLang === "Telugu") {
+      return "🚨 **దంత అత్యవసరం:** ఇది తీవ్రమైన పరిస్థితి కావచ్చు. వెంటనే **108 అంబులెన్స్** కి కాల్ చేయండి!\n\n• ముఖ వాపు, నోటి నుండి ఆపలేని రక్తస్రావం, లేదా శ్వాసకు ఇబ్బంది — ఇవి **అత్యవసర సంకేతాలు**.\n• సమీప Community Health Centre (CHC) లేదా జిల్లా ఆసుపత్రికి వెళ్ళండి.\n• **స్వయంగా మందులు వేసుకోకండి.** వెంటనే దంత వైద్యుడిని కలవండి.";
+    } else {
+      return "🚨 **Dental Emergency Notice:** This could be a serious condition. Call **108 Ambulance** immediately!\n\n• Severe facial swelling, uncontrolled oral bleeding, difficulty breathing or swallowing, or major dental trauma are **emergency warning signs**.\n• Go to your nearest Community Health Centre (CHC) or District Hospital Emergency Department now.\n• **Do not self-medicate.** Seek professional dental evaluation immediately.";
+    }
+  }
+
+  if (isDentalUrgent) {
+    let dentalFac = "";
+    if (nearbyFacilities.length > 0) {
+      dentalFac = "\n\nNearby facilities that may offer dental services: " + nearbyFacilities.slice(0, 2).map(f => "**" + f.name + "** (" + (f.distance || "nearby") + ")").join(", ") + ".";
+    }
+    if (detectedLang === "Hindi") {
+      return "⚠️ **दंत परामर्श अनुशंसित (शीघ्र):** आपके लक्षण जल्द दंत चिकित्सक के परामर्श की सलाह देते हैं। यह निदान नहीं है।\n\n• नजदीकी सरकारी दंत क्लिनिक, PHC, या CHC में दंत ओपीडी में जाएं।\n• दर्द के लिए डॉक्टर की सलाह से Ibuprofen या Paracetamol ले सकते हैं।\n• खुद दांत न निकालें।" + dentalFac;
+    } else if (detectedLang === "Telugu") {
+      return "⚠️ **దంత సంప్రదింపు సూచించబడింది (త్వరగా):** మీ లక్షణాలు త్వరలో దంత వైద్యుడిని కలవమని సూచిస్తున్నాయి. ఇది నిర్ధారణ కాదు.\n\n• సమీప ప్రభుత్వ దంత క్లినిక్, PHC, లేదా CHC లో Dental OPD కి వెళ్ళండి.\n• నొప్పికి వైద్యుడి సలహాతో Ibuprofen లేదా Paracetamol తీసుకోవచ్చు." + dentalFac;
+    } else {
+      return "⚠️ **Urgent Dental Consultation Advised:** The symptoms you describe suggest you should visit a dentist soon. This is not a diagnosis.\n\n• Visit the nearest government dental clinic, PHC Dental OPD, or Community Health Centre.\n• For pain relief, a pharmacist or doctor can advise on Paracetamol or Ibuprofen.\n• Do not attempt to remove a tooth yourself." + dentalFac;
+    }
+  }
+
+  if (isDentalConsult) {
+    let dentalFac = "";
+    if (nearbyFacilities.length > 0) {
+      dentalFac = "\n\nFacilities near you: " + nearbyFacilities.slice(0, 2).map(f => "**" + f.name + "** (" + (f.distance || "nearby") + ")").join(", ") + ".";
+    }
+    if (detectedLang === "Hindi") {
+      return "🦷 **दंत स्वास्थ्य मार्गदर्शन:** आपके लक्षण दंत परामर्श की सलाह देते हैं। यह निदान नहीं है — केवल मार्गदर्शन है।\n\n• नजदीकी PHC या सरकारी दंत क्लिनिक में जाएं।\n• नियमित दांतों की सफाई और फ्लोराइड टूथपेस्ट का उपयोग करें।\n• मीठे और बहुत ठंडे/गरम खाने से बचें।\n• यदि दर्द 2 दिन से अधिक हो तो तुरंत डॉक्टर से मिलें।" + dentalFac;
+    } else if (detectedLang === "Telugu") {
+      return "🦷 **దంత ఆరోగ్య మార్గదర్శకత్వం:** మీ లక్షణాలు దంత సంప్రదింపు సూచిస్తున్నాయి. ఇది నిర్ధారణ కాదు — కేవలం మార్గదర్శకత్వం.\n\n• సమీప PHC లేదా ప్రభుత్వ దంత క్లినిక్‌కు వెళ్ళండి.\n• ఫ్లోరైడ్ టూత్‌పేస్ట్ తో రోజూ రెండుసార్లు పళ్ళు తోమండి.\n• చాలా చల్లని లేదా వేడి ఆహారం నివారించండి.\n• నొప్పి 2 రోజులకంటే ఎక్కువ ఉంటే వైద్యుడిని కలవండి." + dentalFac;
+    } else {
+      return "🦷 **Dental Care Guidance:** Your symptoms suggest a dental consultation is recommended. This is not a diagnosis — only guidance.\n\n• Visit your nearest PHC Dental OPD or government dental clinic for a professional evaluation.\n• Brush twice daily with fluoride toothpaste and avoid very sweet, cold, or hard foods.\n• If pain has lasted more than 2 days, please see a dentist or medical officer promptly.\n• Use 'Book OPD Token' on this app to book a Dental Care appointment." + dentalFac;
+    }
+  }
+  // ── END DENTAL TRIAGE ────────────────────────────────────────────────────────
+
   const isEmergency = /emergency|snake|bite|venom|bleeding|chest pain|accident|आपात|साँप|काटा|రక్తం|పాము/i.test(q);
   if (isEmergency || q.includes("snake") || q.includes("venom")) {
     let facList = "";
@@ -1349,6 +1393,259 @@ app.get("/api/appointments", (req, res) => {
 });
 
 // ==========================================
+// 5b. DENTAL HEALTHCARE API & SYMPTOM CATALOGUE
+// ==========================================
+app.get("/api/dental/symptoms", (req, res) => {
+  res.json({
+    success: true,
+    category: "Dental Care",
+    disclaimer: "Non-diagnostic guidance only. Professional dental consultation is always required for dental conditions.",
+    triageLevels: {
+      ROUTINE: "Routine dental care",
+      CONSULTATION: "Dental consultation recommended",
+      URGENT: "Urgent dental consultation",
+      EMERGENCY: "Emergency care"
+    },
+    symptoms: [
+      {
+        id: "sym-toothache",
+        name: "Toothache",
+        nameHindi: "दांत दर्द",
+        nameTelugu: "పంటి నొప్పి",
+        nameMarathi: "दातदुखी",
+        severity: "CONSULTATION",
+        triageLabel: "Dental consultation recommended",
+        guidance: "Rinse with warm salt water. Avoid extreme temperatures. Seek dentist evaluation.",
+        emergencyWarning: false
+      },
+      {
+        id: "sym-sensitivity",
+        name: "Tooth sensitivity",
+        nameHindi: "दांतों में झनझनाहट / संवेदनशीलता",
+        nameTelugu: "పంటి సున్నితత్వం",
+        nameMarathi: "दातांची संवेदनशीलता",
+        severity: "ROUTINE",
+        triageLabel: "Routine dental care",
+        guidance: "Use desensitizing fluoride toothpaste. Avoid acidic or very cold drinks.",
+        emergencyWarning: false
+      },
+      {
+        id: "sym-decay",
+        name: "Tooth decay / cavity",
+        nameHindi: "दांतों में कीड़ा / कैविटी",
+        nameTelugu: "దంత క్షయం / పుప్పి పన్ను",
+        nameMarathi: "दातांची कीड / पोकळी",
+        severity: "CONSULTATION",
+        triageLabel: "Dental consultation recommended",
+        guidance: "Requires dental restoration/filling before decay reaches nerve. Avoid sugary snacks.",
+        emergencyWarning: false
+      },
+      {
+        id: "sym-swollen-gums",
+        name: "Swollen gums",
+        nameHindi: "मसूड़ों में सूजन",
+        nameTelugu: "చిగుళ్ల వాపు",
+        nameMarathi: "हिरड्या सुजणे",
+        severity: "CONSULTATION",
+        triageLabel: "Dental consultation recommended",
+        guidance: "Warm salt water rinse 3 times daily. Gentle brushing with soft bristles.",
+        emergencyWarning: false
+      },
+      {
+        id: "sym-bleeding-gums",
+        name: "Bleeding gums",
+        nameHindi: "मसूड़ों से खून आना",
+        nameTelugu: "చిగుళ్ళ నుండి రక్తస్రావం",
+        nameMarathi: "हिरड्यांमधून रक्त येणे",
+        severity: "CONSULTATION",
+        triageLabel: "Dental consultation recommended",
+        guidance: "Sign of gingivitis or vitamin deficiency. Gentle cleaning and professional scaling recommended.",
+        emergencyWarning: false
+      },
+      {
+        id: "sym-gum-pain",
+        name: "Gum pain",
+        nameHindi: "मसूड़ों का दर्द",
+        nameTelugu: "చిగుళ్ల నొప్పి",
+        nameMarathi: "हिरड्यांचे दुखणे",
+        severity: "CONSULTATION",
+        triageLabel: "Dental consultation recommended",
+        guidance: "Keep area clean. Seek dental checkup to rule out localized infection.",
+        emergencyWarning: false
+      },
+      {
+        id: "sym-abscess",
+        name: "Dental abscess",
+        nameHindi: "दांत का फोड़ा / मवाद",
+        nameTelugu: "దంత చీము / గడ్డ",
+        nameMarathi: "दातातील पू / गळू",
+        severity: "URGENT",
+        triageLabel: "Urgent dental consultation",
+        guidance: "Serious infection requiring antibiotics and drainage. Do NOT squeeze. See dentist promptly.",
+        emergencyWarning: true
+      },
+      {
+        id: "sym-broken-tooth",
+        name: "Broken / chipped tooth",
+        nameHindi: "टूटा या चटका हुआ दांत",
+        nameTelugu: "విరిగిన పన్ను",
+        nameMarathi: "तुटलेला दात",
+        severity: "URGENT",
+        triageLabel: "Urgent dental consultation",
+        guidance: "Save any tooth fragments in milk or saline. Visit dentist within 24 hours.",
+        emergencyWarning: false
+      },
+      {
+        id: "sym-loose-tooth",
+        name: "Loose tooth",
+        nameHindi: "हिलता हुआ दांत",
+        nameTelugu: "వదులైన పన్ను",
+        nameMarathi: "हलणारा दात",
+        severity: "URGENT",
+        triageLabel: "Urgent dental consultation",
+        guidance: "Do NOT pull or wiggle with fingers. Avoid hard foods on that side.",
+        emergencyWarning: false
+      },
+      {
+        id: "sym-mouth-ulcer",
+        name: "Mouth ulcers",
+        nameHindi: "मुंह के छाले",
+        nameTelugu: "నోటి పూత",
+        nameMarathi: "तोंडातील फोड / अल्सर",
+        severity: "ROUTINE",
+        triageLabel: "Routine dental care",
+        guidance: "Apply topical soothing gel. If ulcer persists beyond 10-14 days, get evaluated.",
+        emergencyWarning: false
+      },
+      {
+        id: "sym-jaw-pain",
+        name: "Jaw pain",
+        nameHindi: "जबड़े का दर्द",
+        nameTelugu: "దవడ నొప్పి",
+        nameMarathi: "जबड्याचे दुखणे",
+        severity: "URGENT",
+        triageLabel: "Urgent dental consultation",
+        guidance: "Apply warm compress. Eat soft foods. If accompanied by chest tightness, seek immediate 108 emergency.",
+        emergencyWarning: false
+      },
+      {
+        id: "sym-dental-trauma",
+        name: "Dental trauma",
+        nameHindi: "दांत की गंभीर चोट",
+        nameTelugu: "దంతాల తీవ్ర గాయం",
+        nameMarathi: "दाताला झालेली दुखापत",
+        severity: "EMERGENCY",
+        triageLabel: "Emergency care",
+        guidance: "Call 108 or go to nearest trauma hospital. Control oral bleeding with sterile gauze pressure.",
+        emergencyWarning: true
+      }
+    ],
+    redFlags: [
+      "Severe facial swelling spreading toward the eye or neck",
+      "Uncontrolled oral bleeding",
+      "Difficulty breathing or swallowing",
+      "Major facial or dental trauma"
+    ]
+  });
+});
+
+// ==========================================
+// 5c. OFFLINE SYNC BATCH ENDPOINT (SIH Demo)
+// Accepts queued offline appointments and registrations
+// ==========================================
+app.post("/api/sync/offline", async (req, res) => {
+  try {
+    const { appointments = [], registrations = [] } = req.body;
+    let syncedAppointmentsCount = 0;
+    let syncedRegistrationsCount = 0;
+
+    // Process offline patient registrations
+    for (const reg of registrations) {
+      if (!reg.phone || !reg.fullName) continue;
+      const sanitizedPhone = String(reg.phone).replace(/\D/g, "");
+      if (sanitizedPhone.length < 10) continue;
+
+      if (isMongoConnected) {
+        try {
+          const exists = await User.findOne({ phone: sanitizedPhone });
+          if (!exists) {
+            await User.create({
+              fullName: reg.fullName.trim(),
+              phone: sanitizedPhone,
+              district: (reg.district || "Maharashtra").trim(),
+              preferredLanguage: reg.preferredLanguage || "English",
+              role: "patient"
+            });
+            syncedRegistrationsCount++;
+          }
+        } catch (uErr) {
+          console.warn("[Sync User Warning]:", uErr.message);
+        }
+      } else {
+        const exists = inMemoryUsers.find(u => u.phone === sanitizedPhone);
+        if (!exists) {
+          inMemoryUsers.push({
+            id: `patient-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+            fullName: reg.fullName.trim(),
+            phone: sanitizedPhone,
+            district: reg.district || "Maharashtra",
+            preferredLanguage: reg.preferredLanguage || "English",
+            role: "patient",
+            createdAt: new Date()
+          });
+          syncedRegistrationsCount++;
+        }
+      }
+    }
+
+    // Process offline appointments
+    for (const apt of appointments) {
+      if (!apt.phone || !apt.facilityId || !apt.patientName) continue;
+      const sanitizedPhone = String(apt.phone).replace(/\D/g, "");
+      
+      const aptToSave = {
+        ...apt,
+        phone: sanitizedPhone,
+        status: apt.status === "Pending Sync" ? "Confirmed" : (apt.status || "Confirmed"),
+        syncedAt: new Date().toISOString()
+      };
+
+      const existingIndex = appointmentsStore.findIndex(a => a.tokenId === apt.tokenId);
+      if (existingIndex >= 0) {
+        appointmentsStore[existingIndex] = aptToSave;
+      } else {
+        appointmentsStore.unshift(aptToSave);
+      }
+
+      if (isMongoConnected) {
+        try {
+          await Appointment.findOneAndUpdate(
+            { tokenId: aptToSave.tokenId },
+            aptToSave,
+            { upsert: true, new: true }
+          );
+        } catch (mErr) {
+          console.warn("[Sync Apt Warning]:", mErr.message);
+        }
+      }
+      syncedAppointmentsCount++;
+    }
+
+    res.json({
+      success: true,
+      message: `Offline synchronization complete. Synced ${syncedAppointmentsCount} appointments and ${syncedRegistrationsCount} registrations.`,
+      syncedAppointments: syncedAppointmentsCount,
+      syncedRegistrations: syncedRegistrationsCount,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error("[Offline Sync Error]:", err);
+    res.status(500).json({ success: false, error: "Failed to process offline sync items." });
+  }
+});
+
+
+// ==========================================
 // 6. POST /api/chat - GEMINI MULTIMODAL INTEGRATION
 // ==========================================
 app.post("/api/chat", async (req, res) => {
@@ -1381,7 +1678,14 @@ Your Core Clinical Rules:
 2. DOCTOR & HOSPITAL MATCHING: Cross-reference the nearby facilities list. Recommend the nearest hospital where that specific specialist is ON DUTY (mention Doctor name, specialization, OPD room number, and estimated token wait if present).
 3. MULTILINGUAL FLUENCY: Respond warmly and conversationally in the patient's preferred language (${language} - Telugu, Hindi, Marathi, or English).
 4. AUDIO-FRIENDLY: Keep the explanation concise and direct so it sounds natural when spoken aloud via the voice button.
-5. EMERGENCY SAFETY: If life-threatening (unconscious, heavy bleeding, chest pain, snakebite), advise calling 108 immediately and tapping the 'Golden Hour Bystander SOS' button for immediate human help.`;
+5. EMERGENCY SAFETY: If life-threatening (unconscious, heavy bleeding, chest pain, snakebite), advise calling 108 immediately and tapping the 'Golden Hour Bystander SOS' button for immediate human help.
+6. DENTAL TRIAGE: When the patient describes dental symptoms (toothache, sensitivity, cavity, swollen/bleeding gums, abscess, broken/loose tooth, jaw pain, mouth ulcers, dental trauma):
+    - Use ONLY safe non-diagnostic language: "Dental consultation recommended", "Urgent dental consultation advised", "Routine dental care", or "Emergency care".
+    - DO NOT claim to diagnose any dental condition.
+    - For EMERGENCY signs (severe facial swelling, uncontrolled oral bleeding, difficulty breathing/swallowing, major dental trauma) → advise calling 108 immediately.
+    - For URGENT signs (dental abscess, broken tooth, severe pain) → advise prompt visit to nearest government dental clinic or CHC Dental OPD.
+    - For ROUTINE symptoms → recommend nearest PHC Dental OPD, emphasise professional evaluation needed, give basic hygiene tips.
+    - Cross-reference nearby facilities list and recommend one with Dental Care / Dentist specialty if present.`;
 
     let imagePart = null;
     let hasImage = false;
