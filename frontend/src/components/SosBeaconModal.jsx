@@ -110,7 +110,10 @@ export default function SosBeaconModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/75 backdrop-blur-xs animate-in fade-in duration-200">
+    <div
+      className="fixed inset-0 z-[9990] flex items-center justify-center p-3 bg-black/75 backdrop-blur-xs animate-in fade-in duration-200"
+      style={{ zIndex: 9990 }}
+    >
       <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-rose-200 overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
         <div className="p-4 sm:p-5 bg-gradient-to-r from-rose-600 to-red-700 text-white flex items-center justify-between">

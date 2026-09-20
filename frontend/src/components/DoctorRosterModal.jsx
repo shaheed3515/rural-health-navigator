@@ -42,7 +42,10 @@ export default function DoctorRosterModal({
   const onDutyCount = localRoster.filter(d => (d.dutyStatus || 'ON_DUTY') === 'ON_DUTY').length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+    <div
+      className="fixed inset-0 z-[9990] flex items-center justify-center p-3 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+      style={{ zIndex: 9990 }}
+    >
       <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="p-4 sm:p-5 bg-gradient-to-r from-[#1d68bd] to-[#15529a] text-white flex items-start justify-between">

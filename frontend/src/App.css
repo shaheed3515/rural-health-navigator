@@ -472,9 +472,14 @@ html, body {
     padding: 14px 16px;
     border-radius: 16px;
   }
-  /* Smooth touch scrolling for horizontal tables & steppers */
+/* Smooth touch scrolling for horizontal tables & steppers */
   .overflow-x-auto {
     -webkit-overflow-scrolling: touch;
   }
+}
+
+/* Modal overlays: guarantee live camera and critical modals appear on top of AI assistant drawer */
+.live-camera-modal-overlay {
+  z-index: 9999 !important;
 }
 

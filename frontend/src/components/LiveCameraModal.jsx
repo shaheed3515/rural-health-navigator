@@ -201,7 +201,10 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-3 bg-black/85 backdrop-blur-sm animate-in fade-in duration-200">
+    <div
+      className="fixed inset-0 z-[9999] live-camera-modal-overlay flex items-center justify-center p-2 sm:p-3 bg-black/85 backdrop-blur-sm animate-in fade-in duration-200"
+      style={{ zIndex: 9999 }}
+    >
       <div className="bg-slate-900 border border-slate-700 rounded-2xl sm:rounded-3xl overflow-hidden max-w-lg w-full shadow-2xl flex flex-col max-h-[95dvh] max-h-[95vh]">
         {/* Header */}
         <div className="p-3 sm:p-3.5 bg-slate-800/95 text-white flex items-center justify-between border-b border-slate-700 gap-2">

@@ -355,7 +355,10 @@ export default function VoiceCallModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/75 backdrop-blur-md animate-fadeIn">
+    <div
+      className="fixed inset-0 z-[9990] flex items-center justify-center p-3 sm:p-4 bg-slate-900/75 backdrop-blur-md animate-fadeIn"
+      style={{ zIndex: 9990 }}
+    >
       <div className="relative w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[92vh]">
         {/* Call Header */}
         <div className="p-4 sm:p-5 bg-gradient-to-r from-[#0284c7] to-[#1d68bd] text-white flex items-center justify-between shrink-0">
