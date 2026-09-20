@@ -1246,6 +1246,44 @@ app.post("/api/appointments", async (req, res) => {
   }
 });
 
+// Helper to evaluate and sync appointment expiration based on date and time
+function evaluateAppointmentStatus(apt) {
+  if (!apt) return apt;
+  if (apt.status === "Cancelled" || apt.status === "Expired" || apt.status === "Completed") return apt;
+  
+  const aptDate = apt.appointmentDate;
+  if (!aptDate) return apt;
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const todayStr = `${year}-${month}-${day}`;
+
+  if (aptDate < todayStr) {
+    return { ...apt, status: "Expired" };
+  }
+
+  if (aptDate === todayStr && apt.estimatedTime) {
+    const match = String(apt.estimatedTime).match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (match) {
+      let hours = parseInt(match[1], 10);
+      const minutes = parseInt(match[2], 10);
+      const meridiem = match[3].toUpperCase();
+      if (meridiem === "PM" && hours < 12) hours += 12;
+      if (meridiem === "AM" && hours === 12) hours = 0;
+
+      const slotDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
+      const expiryThreshold = new Date(slotDate.getTime() + 60 * 60 * 1000);
+      if (now > expiryThreshold) {
+        return { ...apt, status: "Expired" };
+      }
+    }
+  }
+
+  return apt;
+}
+
 // GET /api/appointments/my: Query appointments filtered by patient phone or token
 app.get("/api/appointments/my", async (req, res) => {
   try {
@@ -1287,11 +1325,13 @@ app.get("/api/appointments/my", async (req, res) => {
       patientAppointments = appointmentsStore.filter(a => a.phone === sanitizedPhone);
     }
 
+    const evaluated = patientAppointments.map(evaluateAppointmentStatus);
+
     res.json({
       success: true,
-      count: patientAppointments.length,
+      count: evaluated.length,
       phone: sanitizedPhone,
-      appointments: patientAppointments
+      appointments: evaluated
     });
   } catch (err) {
     console.error("[My Appointments Error]:", err);
@@ -1300,10 +1340,11 @@ app.get("/api/appointments/my", async (req, res) => {
 });
 
 app.get("/api/appointments", (req, res) => {
+  const evaluated = appointmentsStore.slice(0, 20).map(evaluateAppointmentStatus);
   res.json({
     success: true,
-    count: appointmentsStore.length,
-    appointments: appointmentsStore.slice(0, 20)
+    count: evaluated.length,
+    appointments: evaluated
   });
 });
 

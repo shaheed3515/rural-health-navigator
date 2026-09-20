@@ -5,23 +5,62 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
   const canvasRef = useRef(null);
   const [stream, setStream] = useState(null);
   const [capturedImage, setCapturedImage] = useState(null);
-  const [facingMode, setFacingMode] = useState('environment'); // 'environment' (back) or 'user' (front)
+
+  // Check if device is mobile vs laptop/desktop
+  const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '');
+
+  // Laptops default to 'user' (front integrated webcam); Mobile defaults to 'environment' (rear camera for medicine/prescription scanning)
+  const [facingMode, setFacingMode] = useState(isMobile ? 'environment' : 'user');
   const [cameraError, setCameraError] = useState(null);
   const [loadingCamera, setLoadingCamera] = useState(false);
+  const [availableDevices, setAvailableDevices] = useState([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState('');
 
-  // Start camera stream when modal opens
+  // Enumerate video devices when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const enumerateCameras = async () => {
+      try {
+        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const videoInputs = devices.filter((d) => d.kind === 'videoinput');
+          setAvailableDevices(videoInputs);
+
+          // On laptops/desktops, auto-select the integrated/internal webcam to avoid external phone link
+          if (!isMobile && videoInputs.length > 0 && !selectedDeviceId) {
+            const integrated = videoInputs.find((d) =>
+              /integrated|internal|front|webcam|facetime|built-in/i.test(d.label)
+            );
+            if (integrated) {
+              setSelectedDeviceId(integrated.deviceId);
+            } else {
+              setSelectedDeviceId(videoInputs[0].deviceId);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Device enumeration warning:', e);
+      }
+    };
+
+    enumerateCameras();
+  }, [isOpen, isMobile]);
+
+  // Start camera stream when modal opens or settings change
   useEffect(() => {
     if (isOpen && !capturedImage) {
-      startCamera(facingMode);
+      startCamera(facingMode, selectedDeviceId);
     } else {
       stopCamera();
     }
     return () => {
       stopCamera();
     };
-  }, [isOpen, facingMode, capturedImage]);
+  }, [isOpen, facingMode, selectedDeviceId, capturedImage]);
 
-  const startCamera = async (mode) => {
+  // Start Camera with 3-tier resilient fallback ladder (solves mobile portrait & laptop phone-link)
+  const startCamera = async (mode, deviceId) => {
     setLoadingCamera(true);
     setCameraError(null);
     stopCamera();
@@ -31,23 +70,54 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
         throw new Error('Camera access is not supported on this device/browser.');
       }
 
-      const constraints = {
+      const isPortrait = typeof window !== 'undefined' && window.innerHeight > window.innerWidth;
+
+      // Tier 1: Optimal constraints with orientation awareness
+      const tier1Constraints = {
         video: {
-          facingMode: { ideal: mode },
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          ...(deviceId ? { deviceId: { exact: deviceId } } : { facingMode: { ideal: mode } }),
+          width: isMobile ? { ideal: isPortrait ? 720 : 1280 } : { ideal: 1280 },
+          height: isMobile ? { ideal: isPortrait ? 1280 : 720 } : { ideal: 720 }
         },
         audio: false
       };
 
-      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      let mediaStream = null;
+
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia(tier1Constraints);
+      } catch (err1) {
+        console.warn('Tier 1 camera constraints failed, attempting Tier 2 fallback:', err1);
+
+        // Tier 2: FacingMode or deviceId without strict width/height dimensions (avoids mobile portrait OverconstrainedError)
+        try {
+          const tier2Constraints = {
+            video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: mode },
+            audio: false
+          };
+          mediaStream = await navigator.mediaDevices.getUserMedia(tier2Constraints);
+        } catch (err2) {
+          console.warn('Tier 2 camera fallback failed, attempting Tier 3 minimal constraint:', err2);
+
+          // Tier 3: Minimal generic video stream
+          mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        }
+      }
+
       setStream(mediaStream);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
         await videoRef.current.play();
       }
+
+      // Re-query device labels if previously blank (permissions newly granted)
+      if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoInputs = devices.filter((d) => d.kind === 'videoinput');
+        setAvailableDevices(videoInputs);
+      }
     } catch (err) {
-      console.warn('Camera stream error:', err);
+      console.warn('Camera stream fatal error:', err);
       setCameraError(err.message || 'Unable to access camera. Please allow camera permissions.');
     } finally {
       setLoadingCamera(false);
@@ -82,7 +152,7 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
 
   const handleRetake = () => {
     setCapturedImage(null);
-    startCamera(facingMode);
+    startCamera(facingMode, selectedDeviceId);
   };
 
   const handleUsePhoto = () => {
@@ -93,8 +163,14 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
   };
 
   const handleFlipCamera = () => {
+    setSelectedDeviceId(''); // Clear explicit device so facingMode takes precedence
     const nextMode = facingMode === 'environment' ? 'user' : 'environment';
     setFacingMode(nextMode);
+  };
+
+  const handleDeviceChange = (e) => {
+    const newDeviceId = e.target.value;
+    setSelectedDeviceId(newDeviceId);
   };
 
   const handleClose = () => {
@@ -107,30 +183,49 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-700 rounded-3xl overflow-hidden max-w-lg w-full shadow-2xl flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-slate-900 border border-slate-700 rounded-3xl overflow-hidden max-w-lg w-full shadow-2xl flex flex-col max-h-[92vh] max-h-[92dvh]">
         {/* Header */}
-        <div className="p-3.5 bg-slate-800/90 text-white flex items-center justify-between border-b border-slate-700">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center">
+        <div className="p-3 sm:p-3.5 bg-slate-800/95 text-white flex items-center justify-between border-b border-slate-700 gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center shrink-0">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
                 <circle cx="12" cy="13" r="3"/>
               </svg>
             </div>
-            <div>
-              <h3 className="text-sm font-bold tracking-tight">Live Medical Camera</h3>
-              <p className="text-[11px] text-slate-400">Snap doctor prescription, medicine strip, or injury</p>
+            <div className="min-w-0">
+              <h3 className="text-xs sm:text-sm font-bold tracking-tight truncate">Live Medical Camera</h3>
+              <p className="text-[10px] sm:text-[11px] text-slate-400 truncate">
+                {isMobile ? 'Rear/Front scanning for prescriptions' : 'Laptop webcam active'}
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Camera Device Switcher Dropdown (Shown when multiple cameras exist) */}
+            {!capturedImage && !cameraError && availableDevices.length > 1 && (
+              <select
+                value={selectedDeviceId}
+                onChange={handleDeviceChange}
+                className="bg-slate-700 hover:bg-slate-600 text-slate-200 text-[10px] sm:text-[11px] font-semibold rounded-xl px-2 py-1.5 border border-slate-600 focus:outline-none focus:border-sky-400 max-w-[130px] sm:max-w-[170px] truncate cursor-pointer"
+                title="Select Camera Input"
+              >
+                {availableDevices.map((dev, idx) => (
+                  <option key={dev.deviceId || idx} value={dev.deviceId}>
+                    {dev.label || `Camera ${idx + 1}`}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {/* Quick Flip Button (Front/Back) */}
             {!capturedImage && !cameraError && (
               <button
                 type="button"
                 onClick={handleFlipCamera}
-                className="p-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-xl transition cursor-pointer"
-                title="Flip Camera (Front/Back)"
+                className="p-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-xl transition cursor-pointer shrink-0"
+                title={`Switch to ${facingMode === 'environment' ? 'Front (User)' : 'Back (Environment)'} Camera`}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M1 4v6h6M23 20v-6h-6"/>
@@ -138,10 +233,12 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
                 </svg>
               </button>
             )}
+
             <button
               type="button"
               onClick={handleClose}
-              className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-xl transition cursor-pointer"
+              className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-xl transition cursor-pointer shrink-0"
+              title="Close Camera"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="18" y1="6" x2="6" y2="18" />
@@ -152,9 +249,9 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
         </div>
 
         {/* Viewfinder View */}
-        <div className="relative flex-1 bg-black flex items-center justify-center overflow-hidden min-h-[340px] max-h-[480px]">
+        <div className="relative flex-1 bg-black flex items-center justify-center overflow-hidden min-h-[300px] sm:min-h-[360px] max-h-[480px]">
           {loadingCamera && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-sky-400 z-10 bg-black/60">
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-sky-400 z-10 bg-black/70">
               <svg className="animate-spin w-8 h-8 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
@@ -172,24 +269,24 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
                   <line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
               </div>
-              <p className="text-xs text-slate-300 font-medium">{cameraError}</p>
+              <p className="text-xs text-slate-300 font-medium max-w-sm mx-auto">{cameraError}</p>
               <button
                 type="button"
-                onClick={() => startCamera(facingMode)}
-                className="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded-xl transition cursor-pointer"
+                onClick={() => startCamera(facingMode, selectedDeviceId)}
+                className="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-md"
               >
                 Retry Camera
               </button>
             </div>
           ) : capturedImage ? (
-            <div className="relative w-full h-full flex items-center justify-center">
+            <div className="relative w-full h-full flex items-center justify-center bg-black">
               <img src={capturedImage} alt="Captured Prescription / Injury" className="max-h-[440px] w-auto object-contain rounded-lg" />
-              <span className="absolute top-3 right-3 px-2 py-0.5 bg-emerald-500/90 text-white text-[10px] font-bold rounded-full">
+              <span className="absolute top-3 right-3 px-2 py-0.5 bg-emerald-500/90 text-white text-[10px] font-bold rounded-full shadow-xs">
                 Photo Captured
               </span>
             </div>
           ) : (
-            <div className="relative w-full h-full flex items-center justify-center">
+            <div className="relative w-full h-full flex items-center justify-center bg-black">
               <video
                 ref={videoRef}
                 autoPlay
@@ -198,12 +295,12 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
                 className="w-full h-full object-cover"
               />
               {/* Target Aim Reticle */}
-              <div className="pointer-events-none absolute inset-8 border border-white/25 rounded-2xl flex items-center justify-center">
-                <div className="w-8 h-8 border-t-2 border-l-2 border-sky-400 absolute top-0 left-0 -mt-1 -ml-1 rounded-tl-md"></div>
-                <div className="w-8 h-8 border-t-2 border-r-2 border-sky-400 absolute top-0 right-0 -mt-1 -mr-1 rounded-tr-md"></div>
-                <div className="w-8 h-8 border-b-2 border-l-2 border-sky-400 absolute bottom-0 left-0 -mb-1 -ml-1 rounded-bl-md"></div>
-                <div className="w-8 h-8 border-b-2 border-r-2 border-sky-400 absolute bottom-0 right-0 -mb-1 -mr-1 rounded-br-md"></div>
-                <span className="text-[11px] text-white/75 bg-black/50 px-2.5 py-1 rounded-full backdrop-blur-xs font-medium">
+              <div className="pointer-events-none absolute inset-6 sm:inset-8 border border-white/30 rounded-2xl flex items-center justify-center">
+                <div className="w-7 h-7 border-t-2 border-l-2 border-sky-400 absolute top-0 left-0 -mt-1 -ml-1 rounded-tl-md"></div>
+                <div className="w-7 h-7 border-t-2 border-r-2 border-sky-400 absolute top-0 right-0 -mt-1 -mr-1 rounded-tr-md"></div>
+                <div className="w-7 h-7 border-b-2 border-l-2 border-sky-400 absolute bottom-0 left-0 -mb-1 -ml-1 rounded-bl-md"></div>
+                <div className="w-7 h-7 border-b-2 border-r-2 border-sky-400 absolute bottom-0 right-0 -mb-1 -mr-1 rounded-br-md"></div>
+                <span className="text-[10px] sm:text-[11px] text-white/90 bg-black/60 px-3 py-1 rounded-full backdrop-blur-xs font-medium text-center">
                   Align prescription / medicine here
                 </span>
               </div>
@@ -214,7 +311,7 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
         </div>
 
         {/* Action Controls */}
-        <div className="p-4 bg-slate-800/95 border-t border-slate-700 flex items-center justify-between gap-3">
+        <div className="p-3 sm:p-4 bg-slate-800/95 border-t border-slate-700 flex items-center justify-between gap-3">
           {capturedImage ? (
             <>
               <button
@@ -247,7 +344,7 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-4 py-2 text-slate-400 hover:text-white text-xs font-semibold cursor-pointer"
+                className="px-3 sm:px-4 py-2 text-slate-400 hover:text-white text-xs font-semibold cursor-pointer"
               >
                 Cancel
               </button>
@@ -256,13 +353,13 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
                 type="button"
                 onClick={handleSnap}
                 disabled={loadingCamera || !!cameraError}
-                className="w-14 h-14 rounded-full bg-white border-4 border-[#1d68bd] hover:scale-105 active:scale-95 shadow-xl transition cursor-pointer flex items-center justify-center disabled:opacity-50"
+                className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-white border-4 border-[#1d68bd] hover:scale-105 active:scale-95 shadow-xl transition cursor-pointer flex items-center justify-center disabled:opacity-50"
                 title="Snap Photo"
               >
-                <div className="w-10 h-10 rounded-full bg-[#1d68bd]"></div>
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#1d68bd]"></div>
               </button>
 
-              <div className="w-16"></div> {/* spacer */}
+              <div className="w-12 sm:w-16"></div> {/* spacer */}
             </>
           )}
         </div>

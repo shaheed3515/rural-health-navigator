@@ -238,6 +238,48 @@ export default function App() {
   const [myAppointments, setMyAppointments] = useState([]);
   const [bookedAppointments, setBookedAppointments] = useState([]);
 
+  // Dynamic Appointment & Token Expiry Evaluator
+  const getAppointmentStatus = (apt) => {
+    if (!apt) return 'Confirmed';
+    if (apt.status === 'Cancelled' || apt.status === 'Expired' || apt.status === 'Completed') {
+      return apt.status;
+    }
+
+    const aptDate = apt.appointmentDate;
+    if (!aptDate) return apt.status || 'Confirmed';
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
+
+    // Date is strictly in the past (< today)
+    if (aptDate < todayStr) {
+      return 'Expired';
+    }
+
+    // Same day: check if slot time + 60 mins grace period has passed
+    if (aptDate === todayStr && apt.estimatedTime) {
+      const match = String(apt.estimatedTime).match(/(\d+):(\d+)\s*(AM|PM)/i);
+      if (match) {
+        let hours = parseInt(match[1], 10);
+        const minutes = parseInt(match[2], 10);
+        const meridiem = match[3].toUpperCase();
+        if (meridiem === 'PM' && hours < 12) hours += 12;
+        if (meridiem === 'AM' && hours === 12) hours = 0;
+
+        const slotDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
+        const expiryThreshold = new Date(slotDate.getTime() + 60 * 60 * 1000);
+        if (now > expiryThreshold) {
+          return 'Expired';
+        }
+      }
+    }
+
+    return apt.status || 'Confirmed';
+  };
+
   // Booking Modal State
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [bookingClinic, setBookingClinic] = useState(null);
@@ -1297,14 +1339,14 @@ export default function App() {
       </div>
 
       {/* Unified Sleek Healthcare Navigation Bar */}
-      <header className="bg-white border-b border-slate-200/80 px-4 sm:px-6 py-2.5 shadow-xs shrink-0 z-30 sticky top-0">
-        <div className="flex items-center justify-between gap-3">
+      <header className="bg-white border-b border-slate-200/80 px-2.5 sm:px-6 py-2 sm:py-2.5 shadow-xs shrink-0 z-30 sticky top-0">
+        <div className="flex items-center justify-between gap-2 sm:gap-3">
           {/* Left Group: Mobile Trigger + Govt Emblem + Brand */}
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
             {/* Mobile Hamburger Drawer Trigger */}
             <button
               onClick={() => setMobileSidebarOpen(true)}
-              className="md:hidden p-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 cursor-pointer shrink-0"
+              className="md:hidden p-1.5 sm:p-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 cursor-pointer shrink-0"
               aria-label="Open Navigation Menu"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1315,11 +1357,11 @@ export default function App() {
             </button>
 
             {/* Government of Maharashtra Official Emblem Unit */}
-            <div className="flex items-center gap-2 flex-shrink-0" title="Government of Maharashtra">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0" title="Government of Maharashtra">
               <img 
                 src="/maha-logo.png" 
                 alt="Government of Maharashtra" 
-                className="h-8 sm:h-9 w-auto object-contain flex-shrink-0"
+                className="h-7 sm:h-9 w-auto object-contain flex-shrink-0"
               />
               <div className="hidden sm:flex flex-col text-left leading-none">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-tight">GOVERNMENT OF</span>
@@ -1332,15 +1374,15 @@ export default function App() {
             <div className="hidden sm:block h-7 w-[1px] bg-slate-200 flex-shrink-0" />
 
             {/* App Logo & Brand Title */}
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-[#1d68bd] text-white flex items-center justify-center font-bold text-base shadow-sm shadow-[#1d68bd]/25 flex-shrink-0">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#1d68bd] text-white flex items-center justify-center font-bold text-sm sm:text-base shadow-sm shadow-[#1d68bd]/25 flex-shrink-0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 5v14M5 12h14" />
                 </svg>
               </div>
               <div className="flex flex-col min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-black text-slate-900 text-sm sm:text-base tracking-tight leading-none truncate">
+                <div className="flex items-center gap-1">
+                  <span className="font-black text-slate-900 text-xs sm:text-base tracking-tight leading-none truncate max-w-[125px] sm:max-w-none">
                     SWASTHYA SANGAM
                   </span>
                   <span className="hidden sm:inline-block px-1.5 py-0.5 text-[9px] font-bold bg-[#e0edfd] text-[#1d68bd] rounded border border-[#bfdbfe]">
@@ -1402,10 +1444,10 @@ export default function App() {
           </div>
 
           {/* Right Group: Language, Font Sizers, SOS, Notifications & Profile */}
-          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             {/* Language Dropdown */}
-            <div className="relative flex items-center gap-1 px-2 py-1.5 rounded-xl border border-slate-200 bg-white text-[11px] font-semibold text-slate-700 shadow-2xs">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
+            <div className="relative flex items-center gap-1 px-1.5 py-1 sm:px-2 sm:py-1.5 rounded-xl border border-slate-200 bg-white text-[10px] sm:text-[11px] font-semibold text-slate-700 shadow-2xs">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 shrink-0">
                 <circle cx="12" cy="12" r="10"/>
                 <line x1="2" y1="12" x2="22" y2="12"/>
                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10z"/>
@@ -1413,7 +1455,7 @@ export default function App() {
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
-                className="bg-transparent text-slate-700 font-semibold focus:outline-none cursor-pointer pr-1"
+                className="bg-transparent text-slate-700 font-semibold focus:outline-none cursor-pointer pr-0.5 text-[10px] sm:text-[11px]"
               >
                 <option value="English">EN</option>
                 <option value="Hindi">हिंदी</option>
@@ -1468,10 +1510,10 @@ export default function App() {
             {/* Golden Hour Bystander SOS Trigger Button */}
             <button
               onClick={() => setShowSosModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-black transition shadow-sm bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white border-rose-700 cursor-pointer active:scale-98"
+              className="flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl border text-xs font-black transition shadow-sm bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white border-rose-700 cursor-pointer active:scale-98 shrink-0"
               title="Broadcast Emergency Golden Hour SOS Beacon"
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse">
                 <circle cx="12" cy="12" r="2"/>
                 <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/>
               </svg>
@@ -1479,17 +1521,17 @@ export default function App() {
             </button>
 
             {/* Notifications Bell */}
-            <div className="relative">
+            <div className="relative shrink-0">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="w-9 h-9 rounded-xl border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-700 cursor-pointer relative"
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-700 cursor-pointer relative"
                 title="Live Facility Alerts"
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
                   <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
                 </svg>
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-600 text-white text-[9px] font-bold flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-red-600 text-white text-[8px] sm:text-[9px] font-bold flex items-center justify-center">
                   3
                 </span>
               </button>
@@ -1514,14 +1556,14 @@ export default function App() {
             {/* Profile / Role Badge */}
             <div
               onClick={() => setShowAuthModal(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 cursor-pointer transition shadow-2xs shrink-0"
+              className="flex items-center gap-1 sm:gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 cursor-pointer transition shadow-2xs shrink-0"
               title="Click to Switch Role or Sign Out"
             >
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-              <span className="text-xs font-bold truncate max-w-[90px] sm:max-w-[120px]">
+              <span className="text-xs font-bold truncate max-w-[65px] sm:max-w-[120px]">
                 {currentUser?.name?.split(' ')[0] || 'Guest'}
               </span>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 hidden sm:inline-block">
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </div>
@@ -1754,52 +1796,52 @@ export default function App() {
                     </div>
 
                     {/* Quick Stats & Live Actions Cluster */}
-                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0 pt-1 lg:pt-0">
+                    <div className="grid grid-cols-2 sm:flex sm:flex-nowrap items-center gap-2 sm:gap-2.5 shrink-0 pt-1 lg:pt-0 w-full sm:w-auto">
                       {/* Metric 1: Verified Centers */}
-                      <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200/80 shadow-2xs">
-                        <div className="w-8 h-8 rounded-lg bg-[#e0edfd] text-[#1d68bd] border border-[#bfdbfe] flex items-center justify-center font-black text-xs">
+                      <div className="flex items-center gap-2 sm:gap-2.5 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200/80 shadow-2xs">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#e0edfd] text-[#1d68bd] border border-[#bfdbfe] flex items-center justify-center font-black text-xs shrink-0">
                           {facilities?.length || 0}
                         </div>
-                        <div>
-                          <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">{t('centersLabel')}</div>
-                          <div className="text-xs font-bold text-slate-800">{t('centersVerified')}</div>
+                        <div className="min-w-0">
+                          <div className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider text-slate-400 truncate">{t('centersLabel')}</div>
+                          <div className="text-xs font-bold text-slate-800 truncate">{t('centersVerified')}</div>
                         </div>
                       </div>
 
                       {/* Metric 2: 24/7 Triage */}
-                      <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200/80 shadow-2xs">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center font-black text-xs">
+                      <div className="flex items-center gap-2 sm:gap-2.5 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200/80 shadow-2xs">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center font-black text-xs shrink-0">
                           24/7
                         </div>
-                        <div>
-                          <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">{t('triageLabel')}</div>
-                          <div className="text-xs font-bold text-slate-800">{t('triageActive')}</div>
+                        <div className="min-w-0">
+                          <div className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider text-slate-400 truncate">{t('triageLabel')}</div>
+                          <div className="text-xs font-bold text-slate-800 truncate">{t('triageActive')}</div>
                         </div>
                       </div>
 
                       {/* Action 1: Call AI Doctor (Voice Call) */}
                       <button
                         onClick={() => setShowVoiceCall(true)}
-                        className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition cursor-pointer shadow-xs active:scale-98"
+                        className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition cursor-pointer shadow-xs active:scale-98"
                         title="Start In-App Voice Call with Dr. Sangam (AI Medical Officer)"
                       >
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="animate-bounce">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="animate-bounce shrink-0">
                           <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                         </svg>
-                        <span>Call AI Doctor</span>
+                        <span className="truncate">Call AI Doctor</span>
                       </button>
 
                       {/* Action 2: SOS Beacon */}
                       <button
                         onClick={() => setShowSosModal(true)}
-                        className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-bold transition cursor-pointer shadow-xs border border-rose-700 active:scale-98"
+                        className="flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-bold transition cursor-pointer shadow-xs border border-rose-700 active:scale-98"
                         title="Broadcast Emergency Golden Hour SOS Beacon"
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse shrink-0">
                           <circle cx="12" cy="12" r="2"/>
                           <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/>
                         </svg>
-                        <span>SOS Beacon</span>
+                        <span className="truncate">SOS Beacon</span>
                       </button>
                     </div>
                   </div>
@@ -2777,11 +2819,26 @@ export default function App() {
               <div className="space-y-4">
                 <div className="clinical-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
+                    <h2 className="text-base font-black text-slate-900 flex flex-wrap items-center gap-2">
                       <span>{t('appointmentsAndReferrals')}</span>
-                      <span className="text-xs font-bold text-[#0284c7] bg-[#e0f2fe] px-2 py-0.5 rounded-full border border-[#bae6fd]">
-                        {myAppointments.length} {t('activePasses')}
-                      </span>
+                      {(() => {
+                        const activeCount = myAppointments.filter(
+                          (a) => getAppointmentStatus(a) !== 'Expired' && getAppointmentStatus(a) !== 'Cancelled'
+                        ).length;
+                        const expiredCount = myAppointments.filter(
+                          (a) => getAppointmentStatus(a) === 'Expired'
+                        ).length;
+                        return (
+                          <span className="text-xs font-bold text-[#0284c7] bg-[#e0f2fe] px-2.5 py-0.5 rounded-full border border-[#bae6fd] flex items-center gap-1">
+                            <span>{activeCount} {t('activePasses')}</span>
+                            {expiredCount > 0 && (
+                              <span className="text-slate-500 font-semibold text-[10px]">
+                                ({expiredCount} Expired)
+                              </span>
+                            )}
+                          </span>
+                        );
+                      })()}
                     </h2>
                     <p className="text-[11px] text-slate-500 mt-0.5">
                       {t('passesSubtitle')}
@@ -2800,7 +2857,7 @@ export default function App() {
                   </button>
                 </div>
 
-                <div className="clinical-card p-5 space-y-4">
+                <div className="clinical-card p-4 sm:p-5 space-y-4">
                   {myAppointments.length === 0 ? (
                     <div className="py-12 text-center text-slate-400 text-xs">
                       <div className="w-12 h-12 mx-auto mb-2 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
@@ -2823,60 +2880,87 @@ export default function App() {
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                      {myAppointments.map((apt, aIdx) => (
-                        <div key={aIdx} className="p-4 rounded-2xl bg-slate-50/90 border border-slate-200 space-y-3">
-                          <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                            <div>
-                              <span className="font-mono font-black text-[#1d68bd] text-sm">{apt.tokenId}</span>
-                              <div className="text-[10px] text-slate-500 font-semibold">{apt.department}</div>
+                      {myAppointments.map((apt, aIdx) => {
+                        const currentStatus = getAppointmentStatus(apt);
+                        const isExpired = currentStatus === 'Expired';
+                        return (
+                          <div
+                            key={aIdx}
+                            className={`p-4 rounded-2xl border space-y-3 transition ${
+                              isExpired
+                                ? 'bg-slate-50/70 border-slate-200/90 text-slate-600 opacity-85'
+                                : 'bg-slate-50/90 border-slate-200'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                              <div>
+                                <span className={`font-mono font-black text-sm ${isExpired ? 'text-slate-500' : 'text-[#1d68bd]'}`}>
+                                  {apt.tokenId}
+                                </span>
+                                <div className="text-[10px] text-slate-500 font-semibold">{apt.department}</div>
+                              </div>
+                              <span
+                                className={`px-2.5 py-0.5 rounded-lg text-xs font-black ${
+                                  isExpired
+                                    ? 'bg-slate-200/80 text-slate-500 border border-slate-300 line-through'
+                                    : 'bg-[#e0edfd] text-[#1d68bd] border border-[#bfdbfe]'
+                                }`}
+                              >
+                                Token #{apt.tokenNumber}
+                              </span>
                             </div>
-                            <span className="bg-[#e0edfd] text-[#1d68bd] border border-[#bfdbfe] px-2.5 py-0.5 rounded-lg text-xs font-black">
-                              Token #{apt.tokenNumber}
-                            </span>
-                          </div>
 
-                          <div className="text-xs space-y-1.5 text-slate-700">
-                            <div className="flex items-center gap-2">
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 shrink-0">
-                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                                <circle cx="12" cy="7" r="4" />
-                              </svg>
-                              <strong>{apt.patientName}</strong>
+                            <div className="text-xs space-y-1.5 text-slate-700">
+                              <div className="flex items-center gap-2">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 shrink-0">
+                                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                                  <circle cx="12" cy="7" r="4" />
+                                </svg>
+                                <strong>{apt.patientName}</strong>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 shrink-0">
+                                  <path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16" />
+                                  <path d="M9 9h1M9 13h1M9 17h1M14 9h1M14 13h1M14 17h1" />
+                                </svg>
+                                <span>{apt.facilityName}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 shrink-0">
+                                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                  <line x1="16" y1="2" x2="16" y2="6" />
+                                  <line x1="8" y1="2" x2="8" y2="6" />
+                                  <line x1="3" y1="10" x2="21" y2="10" />
+                                </svg>
+                                <span>Date: {apt.appointmentDate} ({apt.estimatedTime || '09:00 AM'})</span>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 shrink-0">
-                                <path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16" />
-                                <path d="M9 9h1M9 13h1M9 17h1M14 9h1M14 13h1M14 17h1" />
-                              </svg>
-                              <span>{apt.facilityName}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 shrink-0">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                                <line x1="16" y1="2" x2="16" y2="6" />
-                                <line x1="8" y1="2" x2="8" y2="6" />
-                                <line x1="3" y1="10" x2="21" y2="10" />
-                              </svg>
-                              <span>Date: {apt.appointmentDate} ({apt.estimatedTime || '09:00 AM'})</span>
-                            </div>
-                          </div>
 
-                          <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
-                            <span className="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">
-                              {apt.status || 'Confirmed'}
-                            </span>
-                            <button
-                              onClick={() => {
-                                setBookingSuccessToken(apt);
-                                setShowBookingModal(true);
-                              }}
-                              className="text-[#0284c7] hover:underline font-bold text-xs cursor-pointer"
-                            >
-                              View Digital Slip ➔
-                            </button>
+                            <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
+                              {isExpired ? (
+                                <span className="bg-slate-100 text-slate-500 border border-slate-200 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                  Expired (Time Over)
+                                </span>
+                              ) : (
+                                <span className="bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                  {currentStatus}
+                                </span>
+                              )}
+                              <button
+                                onClick={() => {
+                                  setBookingSuccessToken(apt);
+                                  setShowBookingModal(true);
+                                }}
+                                className="text-[#0284c7] hover:underline font-bold text-xs cursor-pointer"
+                              >
+                                View Digital Slip ➔
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -4107,18 +4191,18 @@ export default function App() {
       {!isAiOpen && activeTab !== 'ai-assistant' && (
         <button
           onClick={() => setIsAiOpen(true)}
-          className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-3 bg-[#1d68bd] hover:bg-[#15529a] text-white rounded-full font-bold text-xs shadow-lg shadow-[#1d68bd]/30 transition transform hover:scale-105 active:scale-95 cursor-pointer"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 bg-[#1d68bd] hover:bg-[#15529a] text-white rounded-full font-bold text-xs shadow-lg shadow-[#1d68bd]/30 transition transform hover:scale-105 active:scale-95 cursor-pointer"
           title="Open Health AI Assistant"
         >
-          <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
+          <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="4" y="4" width="16" height="16" rx="2" />
               <rect x="9" y="9" width="6" height="6" />
               <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3" />
             </svg>
           </span>
-          <span>Health AI Assistant</span>
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+          <span className="hidden xs:inline sm:inline">Health AI Assistant</span>
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
         </button>
       )}
 
@@ -4370,6 +4454,17 @@ export default function App() {
                     <strong className="text-slate-900">{bookingSuccessToken.appointmentDate} ({bookingSuccessToken.estimatedTime || '09:00 AM'})</strong>
                   </div>
                 </div>
+
+                {getAppointmentStatus(bookingSuccessToken) === 'Expired' && (
+                  <div className="p-2.5 rounded-xl bg-slate-100 border border-slate-300 text-slate-600 text-xs font-semibold flex items-center gap-2">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-slate-500 shrink-0">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    <span>This OPD consultation token has expired as the scheduled date/time has passed.</span>
+                  </div>
+                )}
 
                 <div className="text-center py-2 bg-white rounded-xl border border-[#bae6fd] font-mono text-[11px] text-slate-700">
                   [DIGITAL-VERIFIED-OPD-QR]

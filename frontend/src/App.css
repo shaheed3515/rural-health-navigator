@@ -451,3 +451,25 @@ html, body {
   line-height: 1.6;
   color: #475569;
 }
+
+/* ========================================================= */
+/* SMARTPHONE RESPONSIVE ENHANCEMENTS (< 640px) */
+/* ========================================================= */
+@media (max-width: 640px) {
+  .emergency-ribbon {
+    padding: 5px 10px;
+    font-size: 10.5px;
+  }
+  .clinical-card {
+    border-radius: 16px;
+  }
+  .quick-action-card {
+    padding: 14px 16px;
+    border-radius: 16px;
+  }
+  /* Smooth touch scrolling for horizontal tables & steppers */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
