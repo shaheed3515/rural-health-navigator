@@ -1339,17 +1339,17 @@ export default function App() {
       </div>
 
       {/* Unified Sleek Healthcare Navigation Bar */}
-      <header className="bg-white border-b border-slate-200/80 px-2.5 sm:px-6 py-2 sm:py-2.5 shadow-xs shrink-0 z-30 sticky top-0">
-        <div className="flex items-center justify-between gap-2 sm:gap-3">
+      <header className="bg-white border-b border-slate-200/80 px-2 sm:px-6 py-2 sm:py-2.5 shadow-xs shrink-0 z-30 sticky top-0">
+        <div className="flex items-center justify-between gap-1.5 sm:gap-3">
           {/* Left Group: Mobile Trigger + Govt Emblem + Brand */}
-          <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
             {/* Mobile Hamburger Drawer Trigger */}
             <button
               onClick={() => setMobileSidebarOpen(true)}
-              className="md:hidden p-1.5 sm:p-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 cursor-pointer shrink-0"
+              className="md:hidden p-1.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 cursor-pointer shrink-0"
               aria-label="Open Navigation Menu"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="3" y1="12" x2="21" y2="12" />
                 <line x1="3" y1="6" x2="21" y2="6" />
                 <line x1="3" y1="18" x2="21" y2="18" />
@@ -1357,7 +1357,7 @@ export default function App() {
             </button>
 
             {/* Government of Maharashtra Official Emblem Unit */}
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0" title="Government of Maharashtra">
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0" title="Government of Maharashtra">
               <img 
                 src="/maha-logo.png" 
                 alt="Government of Maharashtra" 
@@ -1375,8 +1375,9 @@ export default function App() {
 
             {/* App Logo & Brand Title */}
             <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-[#1d68bd] text-white flex items-center justify-center font-bold text-sm sm:text-base shadow-sm shadow-[#1d68bd]/25 flex-shrink-0">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              {/* Blue plus icon - hidden on mobile < 640px so title has plenty of room and doesn't get pushed into language selector */}
+              <div className="hidden sm:flex w-8 h-8 rounded-xl bg-[#1d68bd] text-white items-center justify-center font-bold text-base shadow-sm shadow-[#1d68bd]/25 flex-shrink-0">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 5v14M5 12h14" />
                 </svg>
               </div>
@@ -1444,10 +1445,10 @@ export default function App() {
           </div>
 
           {/* Right Group: Language, Font Sizers, SOS, Notifications & Profile */}
-          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {/* Language Dropdown */}
-            <div className="relative flex items-center gap-1 px-1.5 py-1 sm:px-2 sm:py-1.5 rounded-xl border border-slate-200 bg-white text-[10px] sm:text-[11px] font-semibold text-slate-700 shadow-2xs">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 shrink-0">
+            <div className="relative flex items-center gap-0.5 px-1.5 py-1 rounded-xl border border-slate-200 bg-white text-[11px] font-semibold text-slate-700 shadow-2xs">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 shrink-0">
                 <circle cx="12" cy="12" r="10"/>
                 <line x1="2" y1="12" x2="22" y2="12"/>
                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10z"/>
@@ -1455,7 +1456,7 @@ export default function App() {
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
-                className="bg-transparent text-slate-700 font-semibold focus:outline-none cursor-pointer pr-0.5 text-[10px] sm:text-[11px]"
+                className="bg-transparent text-slate-700 font-semibold focus:outline-none cursor-pointer pr-0 text-[11px]"
               >
                 <option value="English">EN</option>
                 <option value="Hindi">हिंदी</option>
@@ -1510,10 +1511,10 @@ export default function App() {
             {/* Golden Hour Bystander SOS Trigger Button */}
             <button
               onClick={() => setShowSosModal(true)}
-              className="flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl border text-xs font-black transition shadow-sm bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white border-rose-700 cursor-pointer active:scale-98 shrink-0"
+              className="flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl border text-[11px] sm:text-xs font-black transition shadow-sm bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white border-rose-700 cursor-pointer active:scale-98 shrink-0"
               title="Broadcast Emergency Golden Hour SOS Beacon"
             >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse">
                 <circle cx="12" cy="12" r="2"/>
                 <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/>
               </svg>
@@ -1524,14 +1525,14 @@ export default function App() {
             <div className="relative shrink-0">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-700 cursor-pointer relative"
+                className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-700 cursor-pointer relative"
                 title="Live Facility Alerts"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
                   <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
                 </svg>
-                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-red-600 text-white text-[8px] sm:text-[9px] font-bold flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-red-600 text-white text-[8px] font-bold flex items-center justify-center">
                   3
                 </span>
               </button>
@@ -1553,14 +1554,16 @@ export default function App() {
               )}
             </div>
 
-            {/* Profile / Role Badge */}
+            {/* Profile / Role Badge: Compact circle on mobile */}
             <div
               onClick={() => setShowAuthModal(true)}
-              className="flex items-center gap-1 sm:gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 cursor-pointer transition shadow-2xs shrink-0"
+              className="flex items-center gap-1.5 p-1 sm:px-2.5 sm:py-1.5 rounded-full sm:rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 cursor-pointer transition shadow-2xs shrink-0"
               title="Click to Switch Role or Sign Out"
             >
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-              <span className="text-xs font-bold truncate max-w-[65px] sm:max-w-[120px]">
+              <div className="w-5 h-5 sm:w-2 sm:h-2 rounded-full bg-slate-100 sm:bg-emerald-500 border border-slate-200 sm:border-0 flex items-center justify-center text-[10px] font-black text-slate-700">
+                <span className="sm:hidden">{(currentUser?.name || 'G')[0]}</span>
+              </div>
+              <span className="text-xs font-bold truncate max-w-[80px] hidden sm:inline-block">
                 {currentUser?.name?.split(' ')[0] || 'Guest'}
               </span>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 hidden sm:inline-block">
@@ -3393,9 +3396,9 @@ export default function App() {
             {/* VIEW 7: DEDICATED FULL-VIEW HEALTH AI ASSISTANT */}
             {/* ========================================================= */}
             {activeTab === 'ai-assistant' && (
-              <div className="p-4 lg:p-6 space-y-6 animate-in fade-in duration-200">
-                {/* Header Banner */}
-                <div className="bg-gradient-to-r from-[#1d68bd] to-[#2563eb] rounded-2xl p-5 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="p-0 sm:p-4 lg:p-6 space-y-0 sm:space-y-6 animate-in fade-in duration-200 -mx-4 -my-4 sm:mx-0 sm:my-0">
+                {/* Header Banner - hidden on mobile so chat is edge-to-edge */}
+                <div className="hidden sm:flex bg-gradient-to-r from-[#1d68bd] to-[#2563eb] rounded-2xl p-5 text-white shadow-sm flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex items-center gap-3.5">
                     <div className="w-12 h-12 rounded-2xl bg-white/15 border border-white/25 flex items-center justify-center text-white shrink-0">
                       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -3446,7 +3449,7 @@ export default function App() {
                 {/* 2-Column Responsive Workspace Grid: Main Canvas (Left) + Grounding Rail (Right) */}
                 <div className="ai-fullview-grid">
                   {/* Left: Chat Canvas & Interactive Dropzone */}
-                  <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[520px] sm:h-[600px] lg:h-[650px] overflow-hidden">
+                  <div className="bg-white rounded-none sm:rounded-2xl border-0 sm:border border-slate-200 shadow-sm flex flex-col h-[calc(100dvh-115px)] sm:h-[600px] lg:h-[650px] overflow-hidden">
                     {/* Suggestion Chips */}
                     <div className="p-3 bg-[#f8fafc] border-b border-slate-200 flex items-center gap-2 overflow-x-auto text-xs shrink-0">
                       <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Prompt:</span>
@@ -3604,7 +3607,7 @@ export default function App() {
                     </div>
 
                     {/* Input Console with Voice Dictation */}
-                    <div className="p-3.5 border-t border-slate-200 bg-white">
+                    <div className="p-3 pb-8 sm:pb-3.5 border-t border-slate-200 bg-white">
                       <form
                         onSubmit={(e) => {
                           e.preventDefault();
@@ -4061,7 +4064,7 @@ export default function App() {
             </div>
 
             {/* Input & Multimodal Attachment Bar */}
-            <div className="p-3 border-t border-slate-200 bg-white space-y-2.5 shrink-0">
+            <div className="p-3 pb-8 sm:pb-3 border-t border-slate-200 bg-white space-y-2 shrink-0 shadow-lg">
               {chatImage && (
                 <div className="flex items-center justify-between p-1.5 bg-[#e0edfd] rounded-xl border border-[#bfdbfe] text-[11px] text-[#1d68bd]">
                   <span className="truncate font-semibold flex items-center gap-1.5">

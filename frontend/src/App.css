@@ -136,8 +136,8 @@ html, body {
   }
 }
 
-/* AI Assistant Drawer: Full Width 100vw on Viewports Under 480px */
-@media (max-width: 480px) {
+/* AI Assistant Drawer: Full Screen on Viewports Under 640px (Accounts for Mobile Chrome Bars) */
+@media (max-width: 640px) {
   .ai-panel-col {
     position: fixed !important;
     top: 0 !important;
@@ -147,19 +147,22 @@ html, body {
     width: 100vw !important;
     max-width: 100vw !important;
     min-width: 100vw !important;
+    height: 100% !important;
     height: 100dvh !important;
-    height: 100vh !important;
+    max-height: 100dvh !important;
     z-index: 60 !important;
     border-left: none !important;
     box-shadow: none !important;
+    display: flex !important;
+    flex-direction: column !important;
   }
   .ai-resize-handle {
     display: none !important;
   }
 }
 
-/* AI Assistant Drawer: Sliding Overlay on 481px - 1023px Tablets */
-@media (min-width: 481px) and (max-width: 1023px) {
+/* AI Assistant Drawer: Sliding Overlay on 641px - 1023px Tablets */
+@media (min-width: 641px) and (max-width: 1023px) {
   .ai-panel-col {
     position: fixed !important;
     top: 0 !important;

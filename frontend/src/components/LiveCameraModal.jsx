@@ -3,13 +3,14 @@ import React, { useState, useRef, useEffect } from 'react';
 export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const nativeFileRef = useRef(null);
   const [stream, setStream] = useState(null);
   const [capturedImage, setCapturedImage] = useState(null);
 
   // Check if device is mobile vs laptop/desktop
   const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '');
 
-  // Laptops default to 'user' (front integrated webcam); Mobile defaults to 'environment' (rear camera for medicine/prescription scanning)
+  // Laptops default to 'user' (front integrated webcam); Mobile defaults to 'environment' (rear camera)
   const [facingMode, setFacingMode] = useState(isMobile ? 'environment' : 'user');
   const [cameraError, setCameraError] = useState(null);
   const [loadingCamera, setLoadingCamera] = useState(false);
@@ -27,7 +28,7 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
           const videoInputs = devices.filter((d) => d.kind === 'videoinput');
           setAvailableDevices(videoInputs);
 
-          // On laptops/desktops, auto-select the integrated/internal webcam to avoid external phone link
+          // On laptops/desktops, auto-select integrated/internal webcam to avoid external phone link
           if (!isMobile && videoInputs.length > 0 && !selectedDeviceId) {
             const integrated = videoInputs.find((d) =>
               /integrated|internal|front|webcam|facetime|built-in/i.test(d.label)
@@ -59,7 +60,7 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
     };
   }, [isOpen, facingMode, selectedDeviceId, capturedImage]);
 
-  // Start Camera with 3-tier resilient fallback ladder (solves mobile portrait & laptop phone-link)
+  // Robust Camera Starter (Works in both vertical portrait & horizontal landscape)
   const startCamera = async (mode, deviceId) => {
     setLoadingCamera(true);
     setCameraError(null);
@@ -70,47 +71,50 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
         throw new Error('Camera access is not supported on this device/browser.');
       }
 
-      const isPortrait = typeof window !== 'undefined' && window.innerHeight > window.innerWidth;
-
-      // Tier 1: Optimal constraints with orientation awareness
-      const tier1Constraints = {
-        video: {
-          ...(deviceId ? { deviceId: { exact: deviceId } } : { facingMode: { ideal: mode } }),
-          width: isMobile ? { ideal: isPortrait ? 720 : 1280 } : { ideal: 1280 },
-          height: isMobile ? { ideal: isPortrait ? 1280 : 720 } : { ideal: 720 }
-        },
-        audio: false
-      };
-
+      // NO hardcoded width/height constraints on mobile!
+      // This allows the mobile browser to natively adapt to vertical portrait orientation without HAL driver conflicts.
       let mediaStream = null;
 
       try {
-        mediaStream = await navigator.mediaDevices.getUserMedia(tier1Constraints);
+        // Attempt 1: Targeted device or facingMode without restrictive dimensions
+        const primaryConstraints = {
+          video: deviceId
+            ? { deviceId: { exact: deviceId } }
+            : { facingMode: { ideal: mode } },
+          audio: false
+        };
+        mediaStream = await navigator.mediaDevices.getUserMedia(primaryConstraints);
       } catch (err1) {
-        console.warn('Tier 1 camera constraints failed, attempting Tier 2 fallback:', err1);
+        console.warn('Primary camera stream attempt failed, trying basic video:', err1);
 
-        // Tier 2: FacingMode or deviceId without strict width/height dimensions (avoids mobile portrait OverconstrainedError)
+        // Attempt 2: Minimal generic stream fallback
         try {
-          const tier2Constraints = {
-            video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: mode },
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: true,
             audio: false
-          };
-          mediaStream = await navigator.mediaDevices.getUserMedia(tier2Constraints);
+          });
         } catch (err2) {
-          console.warn('Tier 2 camera fallback failed, attempting Tier 3 minimal constraint:', err2);
-
-          // Tier 3: Minimal generic video stream
-          mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          throw err2;
         }
       }
 
       setStream(mediaStream);
+
       if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        await videoRef.current.play();
+        const video = videoRef.current;
+        video.srcObject = mediaStream;
+        video.muted = true;
+        video.setAttribute('playsinline', 'true');
+        video.setAttribute('webkit-playsinline', 'true');
+
+        // Play as soon as metadata arrives or immediately
+        video.onloadedmetadata = () => {
+          video.play().catch((e) => console.warn('Video play after metadata error:', e));
+        };
+        video.play().catch((e) => console.warn('Direct video play error:', e));
       }
 
-      // Re-query device labels if previously blank (permissions newly granted)
+      // Re-query device labels once permissions are granted
       if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoInputs = devices.filter((d) => d.kind === 'videoinput');
@@ -118,7 +122,7 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
       }
     } catch (err) {
       console.warn('Camera stream fatal error:', err);
-      setCameraError(err.message || 'Unable to access camera. Please allow camera permissions.');
+      setCameraError(err.message || 'Unable to access camera in vertical mode. Please check camera permissions or use the Native Camera button below.');
     } finally {
       setLoadingCamera(false);
     }
@@ -163,7 +167,7 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
   };
 
   const handleFlipCamera = () => {
-    setSelectedDeviceId(''); // Clear explicit device so facingMode takes precedence
+    setSelectedDeviceId(''); // Clear explicit device so facingMode toggles cleanly
     const nextMode = facingMode === 'environment' ? 'user' : 'environment';
     setFacingMode(nextMode);
   };
@@ -171,6 +175,20 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
   const handleDeviceChange = (e) => {
     const newDeviceId = e.target.value;
     setSelectedDeviceId(newDeviceId);
+  };
+
+  // Handle Native Phone Camera Capture (Guaranteed 100% reliable on all smartphones in vertical mode)
+  const handleNativeCapture = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result;
+      setCapturedImage(dataUrl);
+      stopCamera();
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleClose = () => {
@@ -183,8 +201,8 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-700 rounded-3xl overflow-hidden max-w-lg w-full shadow-2xl flex flex-col max-h-[92vh] max-h-[92dvh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-3 bg-black/85 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl sm:rounded-3xl overflow-hidden max-w-lg w-full shadow-2xl flex flex-col max-h-[95dvh] max-h-[95vh]">
         {/* Header */}
         <div className="p-3 sm:p-3.5 bg-slate-800/95 text-white flex items-center justify-between border-b border-slate-700 gap-2">
           <div className="flex items-center gap-2 min-w-0">
@@ -197,18 +215,18 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
             <div className="min-w-0">
               <h3 className="text-xs sm:text-sm font-bold tracking-tight truncate">Live Medical Camera</h3>
               <p className="text-[10px] sm:text-[11px] text-slate-400 truncate">
-                {isMobile ? 'Rear/Front scanning for prescriptions' : 'Laptop webcam active'}
+                {isMobile ? 'Vertical portrait & horizontal enabled' : 'Laptop webcam active'}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            {/* Camera Device Switcher Dropdown (Shown when multiple cameras exist) */}
+            {/* Camera Device Switcher (Shown when multiple cameras exist) */}
             {!capturedImage && !cameraError && availableDevices.length > 1 && (
               <select
                 value={selectedDeviceId}
                 onChange={handleDeviceChange}
-                className="bg-slate-700 hover:bg-slate-600 text-slate-200 text-[10px] sm:text-[11px] font-semibold rounded-xl px-2 py-1.5 border border-slate-600 focus:outline-none focus:border-sky-400 max-w-[130px] sm:max-w-[170px] truncate cursor-pointer"
+                className="bg-slate-700 hover:bg-slate-600 text-slate-200 text-[10px] sm:text-[11px] font-semibold rounded-xl px-2 py-1.5 border border-slate-600 focus:outline-none focus:border-sky-400 max-w-[120px] sm:max-w-[170px] truncate cursor-pointer"
                 title="Select Camera Input"
               >
                 {availableDevices.map((dev, idx) => (
@@ -249,19 +267,19 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
         </div>
 
         {/* Viewfinder View */}
-        <div className="relative flex-1 bg-black flex items-center justify-center overflow-hidden min-h-[300px] sm:min-h-[360px] max-h-[480px]">
+        <div className="relative flex-1 bg-black flex items-center justify-center overflow-hidden min-h-[320px] sm:min-h-[380px] max-h-[500px]">
           {loadingCamera && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-sky-400 z-10 bg-black/70">
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-sky-400 z-10 bg-black/75">
               <svg className="animate-spin w-8 h-8 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
               </svg>
-              <span className="text-xs font-semibold text-slate-300">Initializing camera feed...</span>
+              <span className="text-xs font-semibold text-slate-300">Initializing vertical camera...</span>
             </div>
           )}
 
           {cameraError ? (
-            <div className="p-6 text-center text-rose-400 space-y-3">
+            <div className="p-5 text-center text-rose-400 space-y-3">
               <div className="w-12 h-12 mx-auto rounded-full bg-rose-500/20 flex items-center justify-center text-rose-400">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10"/>
@@ -270,17 +288,31 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
                 </svg>
               </div>
               <p className="text-xs text-slate-300 font-medium max-w-sm mx-auto">{cameraError}</p>
-              <button
-                type="button"
-                onClick={() => startCamera(facingMode, selectedDeviceId)}
-                className="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-md"
-              >
-                Retry Camera
-              </button>
+              
+              <div className="flex items-center justify-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => startCamera(facingMode, selectedDeviceId)}
+                  className="px-3.5 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-md"
+                >
+                  Retry Camera
+                </button>
+                <button
+                  type="button"
+                  onClick={() => nativeFileRef.current?.click()}
+                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition cursor-pointer shadow-md flex items-center gap-1.5"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                  <span>Use Phone Camera App</span>
+                </button>
+              </div>
             </div>
           ) : capturedImage ? (
             <div className="relative w-full h-full flex items-center justify-center bg-black">
-              <img src={capturedImage} alt="Captured Prescription / Injury" className="max-h-[440px] w-auto object-contain rounded-lg" />
+              <img src={capturedImage} alt="Captured Prescription / Injury" className="max-h-[460px] w-auto object-contain rounded-lg" />
               <span className="absolute top-3 right-3 px-2 py-0.5 bg-emerald-500/90 text-white text-[10px] font-bold rounded-full shadow-xs">
                 Photo Captured
               </span>
@@ -308,12 +340,21 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
           )}
 
           <canvas ref={canvasRef} className="hidden" />
+          {/* Hidden input to trigger native phone camera directly */}
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            ref={nativeFileRef}
+            onChange={handleNativeCapture}
+            className="hidden"
+          />
         </div>
 
         {/* Action Controls */}
-        <div className="p-3 sm:p-4 bg-slate-800/95 border-t border-slate-700 flex items-center justify-between gap-3">
+        <div className="p-3 sm:p-4 bg-slate-800/95 border-t border-slate-700 flex flex-col gap-2">
           {capturedImage ? (
-            <>
+            <div className="flex items-center justify-between gap-3">
               <button
                 type="button"
                 onClick={handleRetake}
@@ -338,9 +379,9 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
                 </svg>
                 <span>Attach to AI Triage</span>
               </button>
-            </>
+            </div>
           ) : (
-            <>
+            <div className="flex items-center justify-between gap-3">
               <button
                 type="button"
                 onClick={handleClose}
@@ -359,8 +400,20 @@ export default function LiveCameraModal({ isOpen, onClose, onCapturePhoto }) {
                 <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#1d68bd]"></div>
               </button>
 
-              <div className="w-12 sm:w-16"></div> {/* spacer */}
-            </>
+              {/* Instant Native Phone Camera Option */}
+              <button
+                type="button"
+                onClick={() => nativeFileRef.current?.click()}
+                className="px-2.5 py-1.5 bg-slate-700/80 hover:bg-slate-600 text-sky-400 text-[11px] font-semibold rounded-xl border border-slate-600 transition cursor-pointer flex items-center gap-1"
+                title="Open your phone's native camera app directly"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+                <span className="hidden xs:inline sm:inline">Phone Camera</span>
+              </button>
+            </div>
           )}
         </div>
       </div>
