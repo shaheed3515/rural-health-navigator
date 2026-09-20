@@ -146,6 +146,51 @@ export default function App() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [fontSizeLevel, setFontSizeLevel] = useState(100); // percentage: 85, 90, 100, 110, 125
 
+  // Mobile Pull-to-Refresh Gesture State
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const touchStartY = useRef(0);
+  const workspaceRef = useRef(null);
+
+  const handleTouchStart = (e) => {
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) return;
+    if (workspaceRef.current && workspaceRef.current.scrollTop <= 0) {
+      touchStartY.current = e.touches[0].clientY;
+    } else {
+      touchStartY.current = 0;
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (!touchStartY.current || isRefreshing) return;
+    if (workspaceRef.current && workspaceRef.current.scrollTop > 0) {
+      touchStartY.current = 0;
+      setPullDistance(0);
+      return;
+    }
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - touchStartY.current;
+    if (diff > 0) {
+      const pull = Math.min(diff * 0.38, 70);
+      setPullDistance(pull);
+    } else {
+      setPullDistance(0);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (pullDistance >= 50 && !isRefreshing) {
+      setIsRefreshing(true);
+      setPullDistance(55);
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    } else {
+      setPullDistance(0);
+    }
+    touchStartY.current = 0;
+  };
+
   // Dynamic Root Font Size Scaling for Accessibility (A-, A, A+)
   useEffect(() => {
     document.documentElement.style.fontSize = `${fontSizeLevel}%`;
@@ -1740,7 +1785,51 @@ export default function App() {
         {/* ========================================================= */}
         {/* COLUMN B: CENTRAL WORKSPACE (State-Driven Tab Routing) */}
         {/* ========================================================= */}
-        <main className="workspace-col">
+        <main
+          ref={workspaceRef}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          className="workspace-col relative"
+        >
+          {/* Mobile Pull-to-Refresh Indicator */}
+          {(pullDistance > 0 || isRefreshing) && (
+            <div
+              style={{
+                height: `${pullDistance}px`,
+                opacity: Math.min(pullDistance / 35, 1),
+                transition: isRefreshing ? 'none' : 'height 0.1s ease-out'
+              }}
+              className="w-full flex items-center justify-center overflow-hidden bg-gradient-to-b from-[#e0edfd]/50 to-transparent pointer-events-none shrink-0"
+            >
+              <div className="flex items-center gap-2 px-3.5 py-1.5 bg-white/95 backdrop-blur-xs rounded-full shadow-md border border-[#bfdbfe] text-[11px] font-semibold text-[#1d68bd]">
+                <svg
+                  className={`w-3.5 h-3.5 text-[#1d68bd] ${isRefreshing ? 'animate-spin' : ''}`}
+                  style={{
+                    transform: isRefreshing ? undefined : `rotate(${pullDistance * 5}deg)`,
+                    transition: isRefreshing ? 'none' : 'transform 0.05s ease-out'
+                  }}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+                  <polyline points="21 3 21 8 16 8" />
+                </svg>
+                <span>
+                  {isRefreshing
+                    ? 'Refreshing Portal...'
+                    : pullDistance >= 50
+                    ? 'Release to refresh'
+                    : 'Pull to refresh'}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Mobile Quick Search Bar (< md screens only) */}
           <div className="md:hidden p-3 bg-white border-b border-slate-200">
             <div className="relative flex items-center">
