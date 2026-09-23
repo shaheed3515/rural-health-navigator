@@ -511,6 +511,26 @@ export default function App() {
     { id: 8, name: 'Oxytocin Injection (Maternal Care)', category: 'Maternal Care', facility: 'Maternity Wing Store', quantity: 85, status: 'In Stock', threshold: 30 }
   ]);
 
+  const handleUpdateMedicineStock = (id, newQty, newStatus) => {
+    setMedicineInventory((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          const updatedQty = newQty !== undefined ? Math.max(0, newQty) : item.quantity;
+          let calculatedStatus = newStatus || item.status;
+          if (!newStatus) {
+            if (updatedQty === 0) calculatedStatus = 'Out of Stock';
+            else if (updatedQty <= item.threshold) calculatedStatus = 'Low Stock';
+            else calculatedStatus = 'In Stock';
+          }
+          return { ...item, quantity: updatedQty, status: calculatedStatus };
+        }
+        return item;
+      })
+    );
+    const medName = medicineInventory.find((m) => m.id === id)?.name || 'Medicine';
+    showToast(`CMO Stock Updated: ${medName}`, 'success');
+  };
+
   // 9b. Diagnostic & Essential Lab Services Ledger (SIH Outcome Alignment)
   const [activeLogisticsSubTab, setActiveLogisticsSubTab] = useState(() => {
     const raw = (typeof window !== 'undefined' ? window.location.hash : '').replace(/^#\/?/, '').trim().toLowerCase();
@@ -2967,18 +2987,52 @@ export default function App() {
                                     <div className="font-semibold">{med.facility}</div>
                                   </td>
                                   <td className="py-3 px-3 font-mono font-bold text-slate-800 text-sm">
-                                    {med.quantity.toLocaleString()} u
+                                    {isAdmin ? (
+                                      <div className="flex items-center gap-1.5">
+                                        <button
+                                          type="button"
+                                          onClick={() => handleUpdateMedicineStock(med.id, med.quantity - (med.quantity > 50 ? 50 : 1))}
+                                          className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs cursor-pointer shadow-2xs"
+                                          title="Decrease stock units"
+                                        >
+                                          -
+                                        </button>
+                                        <span className="min-w-[48px] text-center font-mono text-xs">{med.quantity.toLocaleString()} u</span>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleUpdateMedicineStock(med.id, med.quantity + (med.quantity >= 50 ? 50 : 1))}
+                                          className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs cursor-pointer shadow-2xs"
+                                          title="Increase stock units"
+                                        >
+                                          +
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      `${med.quantity.toLocaleString()} u`
+                                    )}
                                   </td>
                                   <td className="py-3 px-4">
-                                    <span
-                                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                                        med.status === 'In Stock'
-                                          ? 'bg-[#e0f2fe] text-[#0284c7] border border-[#bae6fd]'
-                                          : 'bg-amber-100 text-amber-800 border border-amber-200'
-                                      }`}
-                                    >
-                                      {med.status}
-                                    </span>
+                                    {isAdmin ? (
+                                      <select
+                                        value={med.status}
+                                        onChange={(e) => handleUpdateMedicineStock(med.id, undefined, e.target.value)}
+                                        className="text-[11px] font-bold bg-white border border-slate-300 rounded-lg p-1 text-slate-700 cursor-pointer focus:outline-none focus:border-[#1d68bd]"
+                                      >
+                                        <option value="In Stock">In Stock</option>
+                                        <option value="Low Stock">Low Stock</option>
+                                        <option value="Out of Stock">Out of Stock</option>
+                                      </select>
+                                    ) : (
+                                      <span
+                                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                          med.status === 'In Stock'
+                                            ? 'bg-[#e0f2fe] text-[#0284c7] border border-[#bae6fd]'
+                                            : 'bg-amber-100 text-amber-800 border border-amber-200'
+                                        }`}
+                                      >
+                                        {med.status}
+                                      </span>
+                                    )}
                                   </td>
                                 </tr>
                               ))}
